@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'domicilio.dart';
 import 'editarDomicilio.dart';
+import 'PQRS.dart';
 
 class MostrarDomiciliosPorEstado extends StatelessWidget {
   final String estado;
@@ -123,6 +124,30 @@ class MostrarDomiciliosPorEstado extends StatelessWidget {
                         ),
                       ),
                     ),
+                    Expanded(
+                      flex: 2,
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 5),
+                        child: TextButton(
+                          onPressed: (){
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => PQRSForm(),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            width: 25,
+                            height: 25,
+                            child: Image.asset(
+                              'assets/img/PQRSicon.png',
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                      )
+                    )
                   ],
                 ),
               );
