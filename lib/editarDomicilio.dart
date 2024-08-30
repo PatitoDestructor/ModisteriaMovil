@@ -165,14 +165,14 @@ class _EditarDomicilioState extends State<EditarDomicilio> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 246, 227, 255),
+      backgroundColor: const Color.fromARGB(255, 235, 235, 235),
       appBar: AppBar(
         backgroundColor: const Color.fromARGB(255, 246, 227, 255),
         title: Row(
           children: [
             const Text(
-              'Mis Domicilios',
-              style: TextStyle(fontSize: 35),
+              'Editar Domicilio',
+              style: TextStyle(fontSize: 35, fontWeight: FontWeight.bold),
             ),
             const SizedBox(width: 20),
             SizedBox(
@@ -187,200 +187,121 @@ class _EditarDomicilioState extends State<EditarDomicilio> {
         ),
       ),
       body: SingleChildScrollView(
-        child: Center(
-          child: Column(
-            children: [
-              const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'EDITAR',
-                    style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
-                  ),
-                ],
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16.0),
+              child: Text(
+                'Información de Entrega',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 8),
-              Card(
-                color: const Color.fromARGB(255, 255, 255, 255),
-                margin: const EdgeInsets.all(30),
+            ),
+            Card(
+              color: const Color.fromARGB(255, 255, 255, 255),
+              elevation: 4,
+              margin: const EdgeInsets.symmetric(vertical: 8.0),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      'Dirección: ${widget.domicilio.direccion}',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                    const SizedBox(height: 8),
+                    Text('Descripción: ${widget.domicilio.descripcion}'),
+                    const SizedBox(height: 8),
+                    Text('Valor Prenda: ${widget.domicilio.valorPrenda}'),
+                    const SizedBox(height: 8),
+                    Text('Valor Domicilio: ${widget.domicilio.valorDomicilio}'),
+                    const SizedBox(height: 8),
+                    Text('Valor a Pagar: ${widget.domicilio.valorPagar}'),
+                  ],
+                ),
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16.0),
+              child: Text(
+                'Actualizar Estado',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+            ),
+            DropdownButtonFormField<String>(
+              value: _selectedEstado,
+              items: <String>['Pendiente', 'Entregado', 'Cancelado']
+                  .map((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
+              onChanged: (String? newValue) {
+                setState(() {
+                  _selectedEstado = newValue!;
+                });
+              },
+              decoration: InputDecoration(
+                labelText: 'Estado',
+                fillColor: Colors.grey.shade200,
+                focusedBorder: const OutlineInputBorder(
+                  borderSide: BorderSide(
+                      width: 3, style: BorderStyle.solid, color: Colors.purple),
+                ),
+                enabledBorder: const OutlineInputBorder(
+                  borderSide: BorderSide(width: 1, color: Colors.grey),
+                ),
+                filled: true,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0),
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16.0),
+              child: Text(
+                'Novedades',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+            ),
+            TextField(
+              controller: _novedadController,
+              maxLines: 5,
+              decoration: InputDecoration(
+                labelText: 'Detalles adicionales',
+                fillColor: Colors.grey.shade200,
+                focusedBorder: const OutlineInputBorder(
+                  borderSide: BorderSide(
+                      width: 3, style: BorderStyle.solid, color: Colors.purple),
+                ),
+                enabledBorder: const OutlineInputBorder(
+                  borderSide: BorderSide(width: 1, color: Colors.grey),
+                ),
+                filled: true,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0),
+              ),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                _update(widget.domicilio.id);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.purple, // Cambia el color del botón
+                foregroundColor: Colors.white, // Color del texto del botón
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                 shape: RoundedRectangleBorder(
-                  side: const BorderSide(color: Colors.black, width: 1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(15.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      const Text(
-                        'Información de entrega',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.black),
-                              borderRadius: BorderRadius.circular(10),
-                              color: Colors.white,
-                            ),
-                            padding: const EdgeInsets.all(10),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Dirección: ${widget.domicilio.direccion}',
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                                Text('${widget.domicilio.descripcion}'),
-                                Text('Valor Prenda: ${widget.domicilio.valorPrenda}'),
-                                Row(
-                                  children: <Widget>[
-                                    Text('Valor Domicilio: ${widget.domicilio.valorDomicilio}'),
-                                  ],
-                                ),
-                                Text('Valor a Pagar: ${widget.domicilio.valorPagar}'),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          const Text(
-                            'Estado',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          DropdownButtonFormField<String>(
-                            value: _selectedEstado,
-                            items: <String>['Pendiente', 'Entregado', 'Cancelado']
-                                .map((String value) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(value),
-                              );
-                            }).toList(),
-                            onChanged: (String? newValue) {
-                              setState(() {
-                                _selectedEstado = newValue!;
-                              });
-                            },
-                            decoration: InputDecoration(
-                              border: OutlineInputBorder(),
-                              contentPadding: EdgeInsets.symmetric(horizontal: 10),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          const Text(
-                            'Agregar novedad',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          TextField(
-                            controller: _novedadController,
-                            decoration: InputDecoration(
-                              border: OutlineInputBorder(),
-                              hintText: widget.domicilio.novedades?.isEmpty ?? true 
-                                ? 'Escriba la novedad' 
-                                : widget.domicilio.novedades,
-                            ),
-                            maxLines: 3,
-                          ),
-                          const SizedBox(
-                              height:
-                                  10), // Espacio entre la tarjeta y los botones
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.white,
-                                  side: const BorderSide(color: Colors.black),
-                                  shape: const RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.zero,
-                                  ),
-                                ),
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                },
-                                child: const Text(
-                                  'Cerrar',
-                                  style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.white,
-                                  side: const BorderSide(color: Colors.black),
-                                  shape: const RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.zero,
-                                  ),
-                                ),
-                                onPressed: () {
-                                  _update(widget.domicilio.id);
-                                },
-                                child: const Text(
-                                  'Aceptar',
-                                  style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
               ),
-            ],
-          ),
-        ),
-      ),
-      bottomNavigationBar: Stack(
-        children: [
-          BottomNavigationBar(
-            items: const <BottomNavigationBarItem>[
-              BottomNavigationBarItem(
-                icon: ImageIcon(AssetImage('assets/img/imageDomicilio.png')),
-                label: 'Domicilios',
-              ),
-              BottomNavigationBarItem(
-                icon: ImageIcon(AssetImage('assets/img/imagePerfil.png')),
-                label: 'Perfil',
-              ),
-            ],
-            currentIndex: _selectedIndex,
-            backgroundColor: const Color.fromARGB(255, 246, 227, 255),
-            selectedItemColor: Colors.black,
-            onTap: _onItemTapped,
-          ),
-          CustomPaint(
-            size: Size(MediaQuery.of(context).size.width, 2),
-            painter: SelectedItemPainter(
-              selectedIndex: _selectedIndex,
-              color: Colors.black,
+              child: const Text('Actualizar'),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

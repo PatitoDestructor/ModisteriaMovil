@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Filtrado por estados',
+      title: 'Mis Domicilios',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
@@ -33,7 +33,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   String _selectedEstado = 'Seleccione una opción';
-  int _selectedIndex = 1;
+  int _selectedIndex = 0;
 
   void _onItemTapped(int index) {
     setState(() {
@@ -44,7 +44,7 @@ class _MyHomePageState extends State<MyHomePage> {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => MyHomePage()),
-      ); // Navegación a la página de Login
+      ); // Navegación a la página de Domicilios
     }
     if (index == 1) {
       Navigator.push(
@@ -57,83 +57,66 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+      backgroundColor: const Color.fromARGB(255, 248, 248, 248),
       appBar: AppBar(
-        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+        backgroundColor: Colors.white,
         title: Row(
           children: [
             const Text(
               'Mis Domicilios',
-              style: TextStyle(fontSize: 35),
+              style: TextStyle(fontSize: 35, fontWeight: FontWeight.bold, color: Colors.black),
             ),
             const SizedBox(width: 20),
             SizedBox(
               width: 40,
               height: 40,
               child: Image.asset('assets/img/imageDomicilio.png', fit: BoxFit.cover),
-            )
+            ),
           ],
         ),
+        elevation: 0,
+        centerTitle: true,
       ),
-      body: Center(
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Row(
-              children: [
-                const Padding(
-                  padding: EdgeInsets.only(left: 10, right: 10),
-                  child: Text(
-                    'Filtrar',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                SizedBox(
-                  width: 270,
-                  height: 30,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.black),
-                      borderRadius: BorderRadius.circular(5),
-                      color: const Color.fromARGB(255, 236, 197, 255),
-                    ),
-                    child: Theme(
-                      data: Theme.of(context).copyWith(
-                        canvasColor: const Color.fromARGB(255, 236, 197, 255),
-                      ),
-                      child: DropdownButton<String>(
-                        isExpanded: true,
-                        value: _selectedEstado,
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            _selectedEstado = newValue!;
-                          });
-                        },
-                        items: <String>[
-                          'Seleccione una opción',
-                          'Pendiente',
-                          'Entregado',
-                          'Cancelado'
-                        ].map<DropdownMenuItem<String>>((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Container(
-                              alignment: Alignment.center,
-                              child: Text(value),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                  ),
-                )
-              ],
+            const Text(
+              'Filtrar Domicilios',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black87),
             ),
             const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.purple, width: 2),
+                color: Colors.white,
+              ),
+              child: DropdownButton<String>(
+                isExpanded: true,
+                value: _selectedEstado,
+                onChanged: (String? newValue) {
+                  setState(() {
+                    _selectedEstado = newValue!;
+                  });
+                },
+                items: <String>[
+                  'Seleccione una opción',
+                  'Pendiente',
+                  'Entregado',
+                  'Cancelado'
+                ].map<DropdownMenuItem<String>>((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
+                dropdownColor: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 20),
             Expanded(
               child: MostrarDomiciliosPorEstado(estado: _selectedEstado), // Widget que muestra domicilios filtrados
             ),
@@ -145,24 +128,28 @@ class _MyHomePageState extends State<MyHomePage> {
           BottomNavigationBar(
             items: const <BottomNavigationBarItem>[
               BottomNavigationBarItem(
-                icon: ImageIcon(AssetImage('assets/img/imageDomicilio.png')),
+                icon: ImageIcon(AssetImage('assets/img/imageDomicilio.png'), color: Colors.black),
                 label: 'Domicilios',
               ),
               BottomNavigationBarItem(
-                icon: ImageIcon(AssetImage('assets/img/imagePerfil.png')),
+                icon: ImageIcon(AssetImage('assets/img/imagePerfil.png'), color: Colors.black),
                 label: 'Perfil',
               ),
             ],
             currentIndex: _selectedIndex,
-            backgroundColor: const Color.fromARGB(255, 246, 227, 255),
-            selectedItemColor: Colors.black,
-            onTap: _onItemTapped, // Manejador de tap en la barra de navegación
+            backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+            selectedItemColor: Colors.purple,
+            unselectedItemColor: Colors.black,
+            onTap: _onItemTapped,
+            elevation: 10,
+            selectedFontSize: 16,
+            unselectedFontSize: 14,
           ),
           CustomPaint(
             size: Size(MediaQuery.of(context).size.width, 2),
             painter: SelectedItemPainter(
               selectedIndex: _selectedIndex,
-              color: Colors.black,
+              color: Colors.purple,
             ),
           ),
         ],

@@ -52,51 +52,69 @@ class MostrarDomiciliosPorEstado extends StatelessWidget {
                           borderRadius: BorderRadius.circular(10),
                           color: Colors.white,
                         ),
-                        child: ListTile(
-                          title: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              Text(
-                                '${index + 1}. ${domicilio.direccion}',
-                                style: const TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                              Text('Descripción: ${domicilio.descripcion}'),
-                              Row(
-                                children: <Widget>[
-                                  const Text('Valor Prenda: '),
-                                  Text(
-                                    '${domicilio.valorPrenda.toString()}',
-                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(
+                              '${index + 1}. ${domicilio.direccion}',
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            Text('Descripción: ${domicilio.descripcion}'),
+                            Row(
+                              children: <Widget>[
+                                const Text('Valor Prenda: '),
+                                Text(
+                                  '${domicilio.valorPrenda.toString()}',
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                            Row(
+                              children: <Widget>[
+                                const Text('Valor Domicilio: '),
+                                Text(
+                                  '${domicilio.valorDomicilio.toString()}',
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                            Text('Valor a Pagar: ${domicilio.valorPagar.toString()}'),
+                            Row(
+                              children: <Widget>[
+                                const Text(
+                                  'Estado: ',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                Text(
+                                  '${domicilio.estado}',
+                                  style: TextStyle(
+                                    color: textColor,
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                ],
-                              ),
-                              Row(
-                                children: <Widget>[
-                                  const Text('Valor Domicilio: '),
-                                  Text(
-                                    '${domicilio.valorDomicilio.toString()}',
-                                    style: const TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                ],
-                              ),
-                              Text('Valor a Pagar: ${domicilio.valorPagar.toString()}'),
-                              Row(
-                                children: <Widget>[
-                                  const Text(
-                                    'Estado: ',
-                                    style: TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                  Text(
-                                    '${domicilio.estado}',
-                                    style: TextStyle(
-                                      color: textColor,
+                                ),
+                              ],
+                            ),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                const Text(
+                                  'Novedades: ',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                Flexible(
+                                  child: Text(
+                                    domicilio.novedades.isEmpty
+                                        ? 'No hay novedades'
+                                        : '${domicilio.novedades}',
+                                    style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                     ),
+                                    overflow: TextOverflow.visible, // Evita el desbordamiento
                                   ),
-                                ],
-                              ),
-                            ],
-                          ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     ),

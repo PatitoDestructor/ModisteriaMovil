@@ -12,7 +12,7 @@ class Perfil extends StatefulWidget {
 }
 
 class _PerfilState extends State<Perfil> {
-  int userRating = 5; 
+  int userRating = 5;
   int _selectedIndex = 1;
 
   void _onItemTapped(int index) {
@@ -20,12 +20,11 @@ class _PerfilState extends State<Perfil> {
       _selectedIndex = index;
     });
 
-
     if (index == 0) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => MyHomePage()),
-    );
+      );
     }
 
     if (index == 1) {
@@ -34,209 +33,204 @@ class _PerfilState extends State<Perfil> {
         MaterialPageRoute(builder: (context) => Perfil()),
       );
     }
-    
   }
 
   @override
   Widget build(BuildContext context) {
-
     final userProvider = Provider.of<UserProvider>(context);
     final user = userProvider.user;
 
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        centerTitle: true,
+        title: const Text(
+          'Perfil',
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
+        ),
       ),
-      body: Center(
-        child: user != null ? Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text(
-                  'Perfil del Domiciliario',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(width: 10),
-                SizedBox(
-                  width: 40,
-                  height: 40,
-                  child: Image.asset(
-                    'assets/img/imagePerfil.png',
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Información detallada del domiciliario',
-              style: TextStyle(fontSize: 18, color: Colors.grey[700]),
-            ),
-            const SizedBox(height: 20),
-            Card(
-              color: const Color.fromARGB(255, 255, 255, 255),
-              margin: const EdgeInsets.all(30),
-              shape: RoundedRectangleBorder(
-                side: const BorderSide(color: Colors.black, width: 1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+      body: Container(
+        child: Center(
+          child: user != null
+              ? Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-
-                    //NOMBRE
-                    Text(
-                      'Nombre: ${user.nombre}',
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
+                    const CircleAvatar(
+                      radius: 50,
+                      backgroundImage: AssetImage('assets/img/imagePerfil.png'),
+                    ),
+                    const SizedBox(height: 20),
+                    Card(
+                      color: Colors.white,
+                      margin: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                        side: const BorderSide(color: Colors.black, width: 1),
+                      ),
+                      elevation: 5,
+                      child: Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ListTile(
+                              leading: const Icon(Icons.person, color: Colors.purple),
+                              title: Text(
+                                'Nombre: ${user.nombre}',
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            ListTile(
+                              leading: const Icon(Icons.person_outline, color: Colors.purple),
+                              title: Text(
+                                'Apellidos: ${user.apellido}',
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            ListTile(
+                              leading: const Icon(Icons.email, color: Colors.purple),
+                              title: Text(
+                                'Email: ${user.gmail}',
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            Divider(color: Colors.purple.shade100, thickness: 1),
+                            const ListTile(
+                              leading: Icon(Icons.motorcycle, color: Colors.purple),
+                              title: Text(
+                                'Domiciliario',
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            const ListTile(
+                              leading: Icon(Icons.delivery_dining, color: Colors.purple),
+                              title: Text(
+                                'Número de entregas: 76',
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            const ListTile(
+                              leading: Icon(Icons.flag, color: Colors.purple),
+                              title: Text(
+                                'Venezolano',
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            const ListTile(
+                              leading: Icon(Icons.star, color: Colors.purple),
+                              title: Text(
+                                'Calificación por usuario',
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Row(
+                              children: List.generate(userRating, (index) {
+                                return AnimatedContainer(
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeInOut,
+                                  padding: const EdgeInsets.all(4.0),
+                                  child: Image.asset(
+                                    'assets/img/imageEstrella.png',
+                                    width: 30,
+                                    height: 30,
+                                  ),
+                                );
+                              }),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 10),
-
-                  //APELLIDO
-                    Text(
-                      'Apellidos: ${user.apellido}',
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-
-                  //EMAIL
-                  Text(
-                      'Email: ${user.gmail}',
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-
-                    const Text(
-                      'Domiciliario',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    const Text(
-                      'Número de entregas: 76',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    const Text(
-                      'Venezolano',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    const Text(
-                      'Calificación por usuario',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 20),
                     Row(
-                      children: List.generate(userRating, (index) {
-                        return Padding(
-                          padding: const EdgeInsets.all(4.0),
-                          child: Image.asset(
-                            'assets/img/imageEstrella.png',
-                            width: 30,
-                            height: 30,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.purple,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
                           ),
-                        );
-                      }),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => MyHomePage()),
+                            );
+                          },
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                            child: Text(
+                              'Regresar',
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 20),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.black,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                          ),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const EditarPerfil()),
+                            );
+                          },
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                            child: Text(
+                              'Editar',
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 10), // Espacio entre la tarjeta y los botones
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    side: const  BorderSide(color: Colors.black),
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.zero,
-                    ),
-                  ),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => MyHomePage()),
-                    );
-                  },
-                  child: const Text(
-                    'Regresar',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    side: const BorderSide(color: Colors.black),
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.zero,
-                    ),
-                  ),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const EditarPerfil()),
-                    );
-                  },
-                  child: const Text(
-                    'Editar',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 30),
-              ],
-            ),
-          ],
-        ) : const CircularProgressIndicator(),
+                )
+              : const CircularProgressIndicator(),
+        ),
       ),
-      bottomNavigationBar: Stack(
-        children: [
-          BottomNavigationBar(
-            items: const <BottomNavigationBarItem>[
-              BottomNavigationBarItem(
-                icon: ImageIcon(AssetImage('assets/img/imageDomicilio.png')),
-                label: 'Domicilios',
-              ),
-              BottomNavigationBarItem(
-                icon: ImageIcon(AssetImage('assets/img/imagePerfil.png')),
-                label: 'Perfil',
-              ),
-            ],
-            currentIndex: _selectedIndex,
-            backgroundColor: const Color.fromARGB(255, 246, 227, 255),
-            selectedItemColor: Colors.black,
-            onTap: _onItemTapped,
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: ImageIcon(AssetImage('assets/img/imageDomicilio.png')),
+            label: 'Domicilios',
           ),
-          CustomPaint(
-            size: Size(MediaQuery.of(context).size.width, 2),
-            painter: SelectedItemPainter(
-              selectedIndex: _selectedIndex,
-              color: Colors.black,
-            ),
+          BottomNavigationBarItem(
+            icon: ImageIcon(AssetImage('assets/img/imagePerfil.png')),
+            label: 'Perfil',
           ),
         ],
+        currentIndex: _selectedIndex,
+        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+        onTap: _onItemTapped,
+        elevation: 10,
+        selectedFontSize: 16,
+        unselectedFontSize: 14,
       ),
     );
   }
