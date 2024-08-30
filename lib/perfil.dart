@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:modisteria2/index.dart';
 import 'perfilEditar.dart';
 import 'selectedItemPainter.dart';
+import 'package:provider/provider.dart';
+import 'providers/user_provider.dart';
+import 'index.dart';
 
 class Perfil extends StatefulWidget {
   @override
@@ -17,20 +20,36 @@ class _PerfilState extends State<Perfil> {
       _selectedIndex = index;
     });
 
-    if (index == 0) { 
-      Navigator.popUntil(context, ModalRoute.withName('/index'));
+
+    if (index == 0) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => MyHomePage()),
+    );
     }
+
+    if (index == 1) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => Perfil()),
+      );
+    }
+    
   }
 
   @override
   Widget build(BuildContext context) {
+
+    final userProvider = Provider.of<UserProvider>(context);
+    final user = userProvider.user;
+
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 246, 227, 255),
       appBar: AppBar(
         backgroundColor: const Color.fromARGB(255, 246, 227, 255),
       ),
       body: Center(
-        child: Column(
+        child: user != null ? Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Row(
@@ -66,18 +85,42 @@ class _PerfilState extends State<Perfil> {
               ),
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
+
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Cristian Velez Bolivar',
-                      style: TextStyle(
+
+                    //NOMBRE
+                    Text(
+                      'Nombre: ${user.nombre}',
+                      style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 10),
+
+                  //APELLIDO
+                    Text(
+                      'Apellidos: ${user.apellido}',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+
+                  //EMAIL
+                  Text(
+                      'Email: ${user.gmail}',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+
                     const Text(
                       'Domiciliario',
                       style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -166,16 +209,12 @@ class _PerfilState extends State<Perfil> {
               ],
             ),
           ],
-        ),
+        ) : const CircularProgressIndicator(),
       ),
       bottomNavigationBar: Stack(
         children: [
           BottomNavigationBar(
             items: const <BottomNavigationBarItem>[
-              BottomNavigationBarItem(
-                icon: ImageIcon(AssetImage('assets/img/imageVolver.png')),
-                label: 'Volver',
-              ),
               BottomNavigationBarItem(
                 icon: ImageIcon(AssetImage('assets/img/imageDomicilio.png')),
                 label: 'Domicilios',

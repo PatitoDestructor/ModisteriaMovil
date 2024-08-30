@@ -3,13 +3,26 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'index.dart';
+import 'package:provider/provider.dart';
+import 'providers/user_provider.dart';
+import '../models/user.dart';
+import 'recuperarContraseña.dart';
+
+
 
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final prefs = await SharedPreferences.getInstance();
   final loggedIn = prefs.getBool('loggedIn') ?? false;
-  runApp(MyApp(loggedIn: loggedIn));
+  runApp(
+        MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => UserProvider()),
+      ],
+      child: MyApp(loggedIn: loggedIn),
+    ),
+    );
 }
 
 class MyApp extends StatelessWidget {
@@ -70,42 +83,124 @@ class _RegisterPageState extends State<RegisterPage> {
         // Éxito en el inicio de sesión
         var jsonResponse = jsonDecode(response.body);
         print('Respuesta del servidor: $jsonResponse');
-              
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: <Widget>[
-                Icon(
-                  Icons.check_circle,
-                  color: Colors.white,
+
+        // Verifica si el JSON contiene los datos esperados dentro de 'data' y no son nulos
+        if (jsonResponse != null && jsonResponse['data'] != null) {
+          var userData = jsonResponse['data'];
+
+          // Verifica que los datos necesarios no sean nulos antes de crear el objeto User
+          if (userData['id_usuario'] != null &&
+              userData['nombre'] != null &&
+              userData['apellido'] != null &&
+              userData['gmail'] != null &&
+              userData['contraseña'] != null) {
+            // Crear un objeto User con los datos de 'data'
+            User user = User(
+              id: userData['id_usuario'],
+              nombre: userData['nombre'],
+              apellido: userData['apellido'],
+              gmail: userData['gmail'],
+              contrasena: userData['contraseña']
+            );
+
+            // Guardar los datos del usuario en el UserProvider
+            Provider.of<UserProvider>(context, listen: false).saveUser(user);
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: <Widget>[
+                    Icon(
+                      Icons.check_circle,
+                      color: Colors.white,
+                    ),
+                    SizedBox(width: 5),
+                    Text(
+                      "Bienvenido querido usuario",
+                      style: TextStyle(color: Colors.white),
+                    )
+                  ],
                 ),
-                SizedBox(width: 5),
-                Text(
-                  "Bienvenido querido usuario",
-                  style: TextStyle(color: Colors.white),
-                )
-              ],
-            ),
-            duration: const Duration(milliseconds: 2000),
-            width: 300,
-            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(3.0),
-            ),
-            backgroundColor: const Color.fromARGB(255, 12, 195, 106),
-          ),
-        );
+                duration: const Duration(milliseconds: 2000),
+                width: 300,
+                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10),
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(3.0),
+                ),
+                backgroundColor: const Color.fromARGB(255, 12, 195, 106),
+              ),
+            );
 
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setBool('loggedIn', true);
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setBool('loggedIn', true);
 
-        // Navega al dashboard
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => MyHomePage()),
-        );
+            // Navega al dashboard
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => MyHomePage()),
+            );
+          } else {
+            // Datos del usuario incompletos o nulos dentro de 'data'
+            print('Error: Datos del usuario incompletos o nulos dentro de "data"');
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: <Widget>[
+                    Icon(
+                      Icons.indeterminate_check_box,
+                      color: Colors.white,
+                    ),
+                    SizedBox(width: 5),
+                    Text(
+                      "Credenciales Incorrectas",
+                      style: TextStyle(color: Colors.white),
+                    )
+                  ],
+                ),
+                duration: const Duration(milliseconds: 2000),
+                width: 300,
+                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10),
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(3.0),
+                ),
+                backgroundColor: const Color.fromARGB(255, 241, 10, 10),
+              ),
+            );
+          }
+        } else {
+          // Datos del usuario incompletos o nulos en jsonResponse
+          print('Error: Datos del usuario incompletos o nulos en jsonResponse');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: <Widget>[
+                  Icon(
+                    Icons.indeterminate_check_box,
+                    color: Colors.white,
+                  ),
+                  SizedBox(width: 5),
+                  Text(
+                    "Credenciales Incorrectas",
+                    style: TextStyle(color: Colors.white),
+                  )
+                ],
+              ),
+              duration: const Duration(milliseconds: 2000),
+              width: 300,
+              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(3.0),
+              ),
+              backgroundColor: const Color.fromARGB(255, 241, 10, 10),
+            ),
+          );
+        }
       }
       else {
         // Manejo de error en el inicio de sesión
@@ -271,6 +366,25 @@ class _RegisterPageState extends State<RegisterPage> {
                                 Colors.white, 
                           ),
                           child: const Text('Ingresar'),
+                        ),
+                      ),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 20),
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => PasswordRecoveryPage()),
+                          );
+                        },
+                        child: const Text(
+                          'Recuperar contraseña',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                            color: Colors.purple, // Cambia el color si lo deseas
+                          ),
                         ),
                       ),
                     ),

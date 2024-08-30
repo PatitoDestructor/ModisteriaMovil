@@ -38,7 +38,7 @@ class _EditarDomicilioState extends State<EditarDomicilio> {
         MaterialPageRoute(builder: (context) => MyHomePage()),
       );
     }
-    if (index == 2) {
+    if (index == 1) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => Perfil()),
@@ -359,10 +359,6 @@ class _EditarDomicilioState extends State<EditarDomicilio> {
         children: [
           BottomNavigationBar(
             items: const <BottomNavigationBarItem>[
-              BottomNavigationBarItem(
-                icon: ImageIcon(AssetImage('assets/img/imageVolver.png')),
-                label: 'Volver',
-              ),
               BottomNavigationBarItem(
                 icon: ImageIcon(AssetImage('assets/img/imageDomicilio.png')),
                 label: 'Domicilios',

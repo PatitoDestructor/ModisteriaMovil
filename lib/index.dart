@@ -43,10 +43,10 @@ class _MyHomePageState extends State<MyHomePage> {
     if (index == 0) {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => RegisterPage()),
+        MaterialPageRoute(builder: (context) => MyHomePage()),
       ); // Navegación a la página de Login
     }
-    if (index == 2) {
+    if (index == 1) {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => Perfil()),
@@ -144,10 +144,6 @@ class _MyHomePageState extends State<MyHomePage> {
         children: [
           BottomNavigationBar(
             items: const <BottomNavigationBarItem>[
-              BottomNavigationBarItem(
-                icon: ImageIcon(AssetImage('assets/img/imageVolver.png')),
-                label: 'Volver',
-              ),
               BottomNavigationBarItem(
                 icon: ImageIcon(AssetImage('assets/img/imageDomicilio.png')),
                 label: 'Domicilios',
