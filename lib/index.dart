@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'editarDomicilio.dart';
 import 'perfil.dart';
 import 'main.dart';
@@ -54,6 +55,43 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  void _logout() async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.clear();
+
+  ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: <Widget>[
+            Icon(
+              Icons.check_circle,
+              color: Colors.white,
+            ),
+            SizedBox(width: 5),
+            Text(
+              "Sesión cerrada correctamente",
+              style: TextStyle(color: Colors.white),
+            )
+          ],
+        ),
+        duration: const Duration(seconds: 2),
+        width: 300,
+        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(3.0),
+        ),
+        backgroundColor: const Color.fromARGB(255, 12, 195, 106),
+      ),
+    );
+
+  Navigator.of(context).pushAndRemoveUntil(
+    MaterialPageRoute(builder: (context) => RegisterPage()),
+    (Route<dynamic> route) => false,
+  );
+}
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -76,6 +114,10 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
         elevation: 0,
         centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.logout, color: Colors.black),
+          onPressed: _logout,
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),

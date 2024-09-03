@@ -40,8 +40,9 @@ class _EditarPerfilState extends State<EditarPerfil> {
 
     final _formKey = GlobalKey<FormState>();
     final TextEditingController _nombreController = TextEditingController();
-    final TextEditingController _apellidoController = TextEditingController();
     final TextEditingController _correoController = TextEditingController();
+    final TextEditingController _telefonoController = TextEditingController();
+
 
 
 
@@ -53,13 +54,13 @@ void _mostrarFormularioEditar() {
     context: context,
     builder: (BuildContext context) {
       if (user == null) {
-        return Center(child: CircularProgressIndicator());
+        return const Center(child: CircularProgressIndicator());
       }
       
       int id = user.id;
       _nombreController.text = user.nombre;
-      _apellidoController.text = user.apellido;
-      _correoController.text = user.gmail;
+      _correoController.text = user.email;
+      _telefonoController.text = user.telefono;
 
       return Form(
         key: _formKey,
@@ -104,10 +105,10 @@ void _mostrarFormularioEditar() {
               const SizedBox(height: 15),
 
               TextFormField(
-                controller: _apellidoController,
+                controller: _telefonoController,
                 decoration: InputDecoration(
-                  labelText: 'Apellido',
-                  hintText: 'Ingrese su apellido',
+                  labelText: 'Telefono',
+                  hintText: 'Ingrese su Telefono',
                   hintStyle: const TextStyle(fontWeight: FontWeight.w600),
                   fillColor: Colors.grey.shade200,
                   focusedBorder: const OutlineInputBorder(
@@ -124,7 +125,7 @@ void _mostrarFormularioEditar() {
                 ),
                 validator: (value) {
                   if (value!.isEmpty) {
-                    return 'El apellido es necesario';
+                    return 'El telefono es necesario';
                   }
                   return null;
                 },
@@ -189,13 +190,12 @@ void _editar(int id) async {
     final user = userProvider.user;
 
   if (user != null) {
-    String contrasena = user.contrasena;
     String nombre = _nombreController.text.trim();
-    String apellido = _apellidoController.text.trim();
+    String telefono = _telefonoController.text.trim();
     String correo = _correoController.text.trim();
 
-    String apiUrl = 'https://api-usuarios-zbi6.onrender.com/user/$id';
-
+    String apiUrl = 'https://modisteria-back.onrender.com/api/updateUser/$id';
+    
     try {
       var response = await http.put(
         Uri.parse(apiUrl),
@@ -204,13 +204,12 @@ void _editar(int id) async {
         },
         body: jsonEncode(<String, String>{
           "nombre": nombre,
-          "apellido": apellido,
-          "gmail": correo,
-          "contraseña": contrasena,
+          "email": correo,
+          "telefono": telefono,
         }),
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 201) {
         // Éxito al editar
         var jsonResponse = jsonDecode(response.body);
         print('Respuesta del servidor: $jsonResponse');
@@ -306,19 +305,24 @@ void _editar(int id) async {
   @override
   Widget build(BuildContext context) {
     
+    final userProvider = Provider.of<UserProvider>(context);
+    final user = userProvider.user;
+    
     return Scaffold(
+
       backgroundColor: const Color.fromARGB(255, 246, 227, 255), 
       body: Center(
-        child: Column(
+        child: user != null ?
+        Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text(
-              'Perfil del Domiciliario',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            Text(
+              'Perfil de ${user.nombre}',
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
             Text(
-              'Información detallada del domiciliario',
+              user.roleId == 1 ? 'Información detallada del Administrador' : user.roleId == 2 ? 'Información detallada del Cliente' : 'Información detallada del Domiciliario',
               style: TextStyle(fontSize: 18, color: Colors.grey[700]),
             ),
             const SizedBox(height: 20),
@@ -392,7 +396,7 @@ void _editar(int id) async {
               ),
             ),
           ],
-        ),
+        ): const CircularProgressIndicator(),
       ),
       bottomNavigationBar: Stack(
         children: [

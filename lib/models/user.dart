@@ -2,19 +2,21 @@
 class User {
   final int id;
   final String nombre;
-  final String apellido;
-  final String gmail;
-  final String contrasena;
+  final String email;
+  final String telefono;
+  final String password;
+  final int roleId;
 
-  User({required this.id, required this.nombre, required this.apellido, required this.gmail, required this.contrasena});
+  User({required this.id, required this.nombre, required this.email, required this.telefono, required this.password, required this.roleId});
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
       'nombre': nombre,
-      'apellido': apellido,
-      'gmail': gmail,
-      'contrasena': contrasena
+      'email': email,
+      'telefono': telefono,
+      'password': password,
+      'roleId': roleId
     };
   }
 
@@ -22,9 +24,10 @@ class User {
     return User(
       id: json['id'],
       nombre: json['nombre'],
-      apellido: json['apellido'],
-      gmail: json['gmail'],
-      contrasena: json['contrasena'],
+      email: json['email'],
+      telefono: json['telefono'],
+      password: json['password'],
+      roleId: json['roleId'],
     );
   }
 }

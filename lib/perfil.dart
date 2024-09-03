@@ -55,163 +55,108 @@ class _PerfilState extends State<Perfil> {
           ),
         ),
       ),
-      body: Container(
-        child: Center(
-          child: user != null
-              ? Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const CircleAvatar(
-                      radius: 50,
-                      backgroundImage: AssetImage('assets/img/imagePerfil.png'),
-                    ),
-                    const SizedBox(height: 20),
-                    Card(
-                      color: Colors.white,
-                      margin: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                        side: const BorderSide(color: Colors.black, width: 1),
+      body: SingleChildScrollView(
+        child: Container(
+          child: Center(
+            child: user != null
+                ? Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const CircleAvatar(
+                        radius: 50,
+                        backgroundImage: AssetImage('assets/img/imagePerfil.png'),
                       ),
-                      elevation: 5,
-                      child: Padding(
-                        padding: const EdgeInsets.all(20.0),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            ListTile(
-                              leading: const Icon(Icons.person, color: Colors.purple),
-                              title: Text(
-                                'Nombre: ${user.nombre}',
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                            ListTile(
-                              leading: const Icon(Icons.person_outline, color: Colors.purple),
-                              title: Text(
-                                'Apellidos: ${user.apellido}',
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                            ListTile(
-                              leading: const Icon(Icons.email, color: Colors.purple),
-                              title: Text(
-                                'Email: ${user.gmail}',
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                            Divider(color: Colors.purple.shade100, thickness: 1),
-                            const ListTile(
-                              leading: Icon(Icons.motorcycle, color: Colors.purple),
-                              title: Text(
-                                'Domiciliario',
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                            const ListTile(
-                              leading: Icon(Icons.delivery_dining, color: Colors.purple),
-                              title: Text(
-                                'Número de entregas: 76',
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                            const ListTile(
-                              leading: Icon(Icons.flag, color: Colors.purple),
-                              title: Text(
-                                'Venezolano',
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                            const ListTile(
-                              leading: Icon(Icons.star, color: Colors.purple),
-                              title: Text(
-                                'Calificación por usuario',
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            Row(
-                              children: List.generate(userRating, (index) {
-                                return AnimatedContainer(
-                                  duration: const Duration(milliseconds: 300),
-                                  curve: Curves.easeInOut,
-                                  padding: const EdgeInsets.all(4.0),
-                                  child: Image.asset(
-                                    'assets/img/imageEstrella.png',
-                                    width: 30,
-                                    height: 30,
+                      const SizedBox(height: 20),
+                      Card(
+                        color: Colors.white,
+                        margin: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                          side: const BorderSide(color: Colors.black, width: 1),
+                        ),
+                        elevation: 5,
+                        child: Padding(
+                          padding: const EdgeInsets.all(20.0),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ListTile(
+                                leading: const Icon(Icons.person, color: Colors.purple),
+                                title: Text(
+                                  'Nombre: ${user.nombre}',
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                );
-                              }),
-                            ),
-                          ],
+                                ),
+                              ),
+                              ListTile(
+                                leading: const Icon(Icons.phone , color: Colors.purple),
+                                title: Text(
+                                  'Telefono: ${user.telefono}',
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              ListTile(
+                                leading: const Icon(Icons.email, color: Colors.purple),
+                                title: Text(
+                                  'Email: ${user.email}',
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              Divider(color: Colors.purple.shade100, thickness: 1),
+                              ListTile(
+                                leading: const Icon(Icons.motorcycle, color: Colors.purple),
+                                title: Text(
+                                  user.roleId == 1 ? 'Administrador' : user.roleId == 2 ? 'Cliente' : 'Domiciliario',
+                                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.purple,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15),
+                      const SizedBox(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+              
+                          const SizedBox(width: 20),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.black,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                            ),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const EditarPerfil()),
+                              );
+                            },
+                            child: const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                              child: Text(
+                                'Editar',
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
                             ),
                           ),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => MyHomePage()),
-                            );
-                          },
-                          child: const Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                            child: Text(
-                              'Regresar',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 20),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.black,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                          ),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => const EditarPerfil()),
-                            );
-                          },
-                          child: const Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                            child: Text(
-                              'Editar',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                )
-              : const CircularProgressIndicator(),
+                        ],
+                      ),
+                    ],
+                  )
+                : const CircularProgressIndicator(),
+          ),
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(

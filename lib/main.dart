@@ -7,9 +7,7 @@ import 'package:provider/provider.dart';
 import 'providers/user_provider.dart';
 import '../models/user.dart';
 import 'recuperarContraseña.dart';
-
-
-
+import 'package:jwt_decode/jwt_decode.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -61,12 +59,12 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _correoController = TextEditingController();
   final TextEditingController _contraController = TextEditingController();
 
-  void _login() async {
+void _login() async {
   if (_formKey.currentState!.validate()) {
     String email = _correoController.text.trim();
     String password = _contraController.text.trim();
-    String apiUrl = 'https://api-usuarios-zbi6.onrender.com/user/login';
-    
+    String apiUrl = 'https://modisteria-back.onrender.com/api/login';
+
     try {
       var response = await http.post(
         Uri.parse(apiUrl),
@@ -74,118 +72,51 @@ class _RegisterPageState extends State<RegisterPage> {
           'Content-Type': 'application/json; charset=UTF-8',
         },
         body: jsonEncode(<String, String>{
-          'gmail': email,
-          'contraseña': password,
+          'email': email,
+          'password': password,
         }),
       );
 
       if (response.statusCode == 200) {
-        // Éxito en el inicio de sesión
         var jsonResponse = jsonDecode(response.body);
         print('Respuesta del servidor: $jsonResponse');
 
-        // Verifica si el JSON contiene los datos esperados dentro de 'data' y no son nulos
-        if (jsonResponse != null && jsonResponse['data'] != null) {
-          var userData = jsonResponse['data'];
+        // Decodificar el token JWT
+        String token = jsonResponse['token'];
+        Map<String, dynamic> decodedToken = Jwt.parseJwt(token);
 
-          // Verifica que los datos necesarios no sean nulos antes de crear el objeto User
-          if (userData['id_usuario'] != null &&
-              userData['nombre'] != null &&
-              userData['apellido'] != null &&
-              userData['gmail'] != null &&
-              userData['contraseña'] != null) {
-            // Crear un objeto User con los datos de 'data'
-            User user = User(
-              id: userData['id_usuario'],
-              nombre: userData['nombre'],
-              apellido: userData['apellido'],
-              gmail: userData['gmail'],
-              contrasena: userData['contraseña']
-            );
+        // Acceder a los datos del usuario dentro del campo 'payload'
+        Map<String, dynamic> userData = decodedToken['payload'];
 
-            // Guardar los datos del usuario en el UserProvider
-            Provider.of<UserProvider>(context, listen: false).saveUser(user);
+        print('Datos del usuario decodificados: $userData');
 
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: <Widget>[
-                    Icon(
-                      Icons.check_circle,
-                      color: Colors.white,
-                    ),
-                    SizedBox(width: 5),
-                    Text(
-                      "Bienvenido querido usuario",
-                      style: TextStyle(color: Colors.white),
-                    )
-                  ],
-                ),
-                duration: const Duration(milliseconds: 2000),
-                width: 300,
-                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10),
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(3.0),
-                ),
-                backgroundColor: const Color.fromARGB(255, 12, 195, 106),
-              ),
-            );
+        // Verificar si el campo 'id' es nulo
+        if (userData['id'] != null) {
+          // Crear un objeto User con los datos del token decodificado
+          User user = User(
+            id: userData['id'],
+            nombre: userData['nombre'],
+            email: userData['email'],
+            telefono: userData['telefono'],
+            password: userData['contraseña'],
+            roleId: userData['role'],
+          );
 
-            final prefs = await SharedPreferences.getInstance();
-            await prefs.setBool('loggedIn', true);
+          // Guardar los datos del usuario en el UserProvider
+          Provider.of<UserProvider>(context, listen: false).saveUser(user);
 
-            // Navega al dashboard
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => MyHomePage()),
-            );
-          } else {
-            // Datos del usuario incompletos o nulos dentro de 'data'
-            print('Error: Datos del usuario incompletos o nulos dentro de "data"');
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: <Widget>[
-                    Icon(
-                      Icons.indeterminate_check_box,
-                      color: Colors.white,
-                    ),
-                    SizedBox(width: 5),
-                    Text(
-                      "Credenciales Incorrectas",
-                      style: TextStyle(color: Colors.white),
-                    )
-                  ],
-                ),
-                duration: const Duration(milliseconds: 2000),
-                width: 300,
-                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10),
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(3.0),
-                ),
-                backgroundColor: const Color.fromARGB(255, 241, 10, 10),
-              ),
-            );
-          }
-        } else {
-          // Datos del usuario incompletos o nulos en jsonResponse
-          print('Error: Datos del usuario incompletos o nulos en jsonResponse');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: const Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
                   Icon(
-                    Icons.indeterminate_check_box,
+                    Icons.check_circle,
                     color: Colors.white,
                   ),
                   SizedBox(width: 5),
                   Text(
-                    "Credenciales Incorrectas",
+                    "Bienvenido querido usuario",
                     style: TextStyle(color: Colors.white),
                   )
                 ],
@@ -197,12 +128,22 @@ class _RegisterPageState extends State<RegisterPage> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(3.0),
               ),
-              backgroundColor: const Color.fromARGB(255, 241, 10, 10),
+              backgroundColor: const Color.fromARGB(255, 12, 195, 106),
             ),
           );
+
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setBool('loggedIn', true);
+
+          // Navega al dashboard
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => MyHomePage()),
+          );
+        } else {
+          print('Error: El campo "id" es nulo');
         }
-      }
-      else {
+      } else {
         // Manejo de error en el inicio de sesión
         print('Error de inicio de sesión: ${response.statusCode}');
         ScaffoldMessenger.of(context).showSnackBar(
@@ -255,6 +196,8 @@ class _RegisterPageState extends State<RegisterPage> {
     }
   }
 }
+
+
 
 
   @override
