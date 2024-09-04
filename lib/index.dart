@@ -108,7 +108,7 @@ class _MyHomePageState extends State<MyHomePage> {
             SizedBox(
               width: 40,
               height: 40,
-              child: Image.asset('assets/img/imageDomicilio.png', fit: BoxFit.cover),
+              child: Image.asset('assets/img/domicilio.png', fit: BoxFit.cover),
             ),
           ],
         ),
@@ -170,7 +170,7 @@ class _MyHomePageState extends State<MyHomePage> {
           BottomNavigationBar(
             items: const <BottomNavigationBarItem>[
               BottomNavigationBarItem(
-                icon: ImageIcon(AssetImage('assets/img/imageDomicilio.png'), color: Colors.black),
+                icon: ImageIcon(AssetImage('assets/img/domicilio.png'), color: Colors.black),
                 label: 'Domicilios',
               ),
               BottomNavigationBarItem(

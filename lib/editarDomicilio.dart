@@ -179,7 +179,7 @@ class _EditarDomicilioState extends State<EditarDomicilio> {
               width: 40,
               height: 40,
               child: Image.asset(
-                'assets/img/imageDomicilio.png',
+                'assets/img/domicilio.png',
                 fit: BoxFit.cover,
               ),
             ),

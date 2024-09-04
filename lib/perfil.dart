@@ -64,7 +64,7 @@ class _PerfilState extends State<Perfil> {
                     children: [
                       const CircleAvatar(
                         radius: 50,
-                        backgroundImage: AssetImage('assets/img/imagePerfil.png'),
+                        backgroundImage: AssetImage('assets/img/user.png'),
                       ),
                       const SizedBox(height: 20),
                       Card(
@@ -162,7 +162,7 @@ class _PerfilState extends State<Perfil> {
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: ImageIcon(AssetImage('assets/img/imageDomicilio.png')),
+            icon: ImageIcon(AssetImage('assets/img/domicilio.png')),
             label: 'Domicilios',
           ),
           BottomNavigationBarItem(

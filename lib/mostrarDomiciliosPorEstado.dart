@@ -27,11 +27,31 @@ class MostrarDomiciliosPorEstado extends StatelessWidget {
       future: obtenerDomiciliosPorEstado(estado),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator());
         } else if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
+          return const Center(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 90.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ListTile(
+                    leading: Icon(Icons.block, color: Colors.purple),
+                    title: Text(
+                      'No tienes Domicilios',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+
         } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return Center(child: Text('No hay domicilios disponibles'));
+          return const Center(child: Text('No hay domicilios disponibles'));
         } else {
           List<Domicilio> domiciliosFiltrados = snapshot.data!;
           return ListView.builder(
@@ -135,7 +155,7 @@ class MostrarDomiciliosPorEstado extends StatelessWidget {
                             width: 25,
                             height: 25,
                             child: Image.asset(
-                              'assets/img/imageEditar.png',
+                              'assets/img/Edit.jpg',
                               fit: BoxFit.cover,
                             ),
                           ),

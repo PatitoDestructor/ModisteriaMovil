@@ -194,7 +194,7 @@ void _editar(int id) async {
     String telefono = _telefonoController.text.trim();
     String correo = _correoController.text.trim();
 
-    String apiUrl = 'https://modisteria-back.onrender.com/api/updateUser/$id';
+    String apiUrl = 'https://modisteria-back-production.up.railway.app/api/updateUser/$id';
     
     try {
       var response = await http.put(
@@ -403,7 +403,7 @@ void _editar(int id) async {
           BottomNavigationBar(
             items: const <BottomNavigationBarItem>[
               BottomNavigationBarItem(
-                icon: ImageIcon(AssetImage('assets/img/imageDomicilio.png')),
+                icon: ImageIcon(AssetImage('assets/img/domicilio.png')),
                 label: 'Domicilios',
               ),
               BottomNavigationBarItem(
