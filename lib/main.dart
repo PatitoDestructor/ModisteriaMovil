@@ -104,13 +104,18 @@ void _login() async {
             nombre: userData['nombre'],
             email: userData['email'],
             telefono: userData['telefono'],
-            password: userData['password'],  // Cambié de 'contraseña' a 'password'
-            direccion: userData['direccion'] ?? '',  // Manejar el caso nulo
-            roleId: userData['role']['id'],  // Acceder correctamente al campo id dentro de role
+            password: userData['password'],
+            direccion: userData['direccion'] ?? '',  
+            roleId: userData['role']['id'],
           );
 
           // Guardar los datos del usuario en el UserProvider
           Provider.of<UserProvider>(context, listen: false).saveUser(user);
+          // Guardar el token en SharedPreferences
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('x-token', token);
+
+          verificarToken();
 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -139,7 +144,7 @@ void _login() async {
             ),
           );
 
-          final prefs = await SharedPreferences.getInstance();
+          final prefes = await SharedPreferences.getInstance();
           await prefs.setBool('loggedIn', true);
 
           // Navega al dashboard
@@ -201,6 +206,17 @@ void _login() async {
         },
       );
     }
+  }
+}
+
+Future<void> verificarToken() async {
+  final prefs = await SharedPreferences.getInstance();
+  String? tokenGuardado = prefs.getString('x-token'); // Verificar el 'x-token'
+
+  if (tokenGuardado != null) {
+    print('Token guardado: $tokenGuardado');
+  } else {
+    print('No se encontró ningún token guardado.');
   }
 }
 

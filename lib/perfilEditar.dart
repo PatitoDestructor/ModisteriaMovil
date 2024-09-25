@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'index.dart';
 import 'main.dart';
-import 'perfil.dart'; 
+import 'perfil.dart';
 import 'selectedItemPainter.dart';
 import 'package:provider/provider.dart';
 import 'providers/user_provider.dart';
@@ -16,7 +17,6 @@ class EditarPerfil extends StatefulWidget {
 }
 
 class _EditarPerfilState extends State<EditarPerfil> {
-  
   int _selectedIndex = 1;
 
   void _onItemTapped(int index) {
@@ -28,7 +28,7 @@ class _EditarPerfilState extends State<EditarPerfil> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => MyHomePage()),
-    );
+      );
     }
     if (index == 1) {
       Navigator.pushReplacement(
@@ -38,268 +38,223 @@ class _EditarPerfilState extends State<EditarPerfil> {
     }
   }
 
-    final _formKey = GlobalKey<FormState>();
-    final TextEditingController _nombreController = TextEditingController();
-    final TextEditingController _correoController = TextEditingController();
-    final TextEditingController _telefonoController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _nombreController = TextEditingController();
+  final TextEditingController _telefonoController = TextEditingController();
 
-
-
-
-void _mostrarFormularioEditar() {
-  final userProvider = Provider.of<UserProvider>(context, listen: false);
-  final user = userProvider.user;
-
-  showModalBottomSheet(
-    context: context,
-    builder: (BuildContext context) {
-      if (user == null) {
-        return const Center(child: CircularProgressIndicator());
-      }
-      
-      int id = user.id;
-      _nombreController.text = user.nombre;
-      _correoController.text = user.email;
-      _telefonoController.text = user.telefono;
-
-      return Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              const Text(
-                'Editar Información',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 20),
-
-              TextFormField(
-                controller: _nombreController,
-                decoration: InputDecoration(
-                  labelText: 'Nombre',
-                  hintText: 'Ingrese su nombre',
-                  hintStyle: const TextStyle(fontWeight: FontWeight.w600),
-                  fillColor: Colors.grey.shade200,
-                  focusedBorder: const OutlineInputBorder(
-                    borderSide: BorderSide(
-                      width: 3,
-                      style: BorderStyle.solid,
-                      color: Colors.purple,
-                    ),
-                  ),
-                  enabledBorder: const OutlineInputBorder(
-                    borderSide: BorderSide(width: 0, style: BorderStyle.none),
-                  ),
-                  filled: true,
-                ),
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return 'El nombre es necesario';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 15),
-
-              TextFormField(
-                controller: _telefonoController,
-                decoration: InputDecoration(
-                  labelText: 'Telefono',
-                  hintText: 'Ingrese su Telefono',
-                  hintStyle: const TextStyle(fontWeight: FontWeight.w600),
-                  fillColor: Colors.grey.shade200,
-                  focusedBorder: const OutlineInputBorder(
-                    borderSide: BorderSide(
-                      width: 3,
-                      style: BorderStyle.solid,
-                      color: Colors.purple,
-                    ),
-                  ),
-                  enabledBorder: const OutlineInputBorder(
-                    borderSide: BorderSide(width: 0, style: BorderStyle.none),
-                  ),
-                  filled: true,
-                ),
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return 'El telefono es necesario';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 15),
-
-              TextFormField(
-                controller: _correoController,
-                decoration: InputDecoration(
-                  labelText: 'Correo',
-                  hintText: 'Ingrese su correo electrónico',
-                  hintStyle: const TextStyle(fontWeight: FontWeight.w600),
-                  fillColor: Colors.grey.shade200,
-                  focusedBorder: const  OutlineInputBorder(
-                    borderSide: BorderSide(
-                      width: 3,
-                      style: BorderStyle.solid,
-                      color: Colors.purple,
-                    ),
-                  ),
-                  enabledBorder: const OutlineInputBorder(
-                    borderSide: BorderSide(width: 0, style: BorderStyle.none),
-                  ),
-                  filled: true,
-                ),
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return 'El correo es necesario';
-                  } else if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                    return 'Ingrese un correo válido';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 30),
-
-              ElevatedButton(
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    // Lógica para guardar los cambios
-                    _editar(id);
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor:
-                      Colors.black,
-                  foregroundColor:
-                      Colors.white, 
-                ),
-                child: const Text('Editar'),
-              ),
-            ],
-          ),
-        ),
-      );
-    },
-  );
-}
-
-void _editar(int id) async {
+  void _mostrarFormularioEditar() {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final user = userProvider.user;
 
-  if (user != null) {
-    String nombre = _nombreController.text.trim();
-    String telefono = _telefonoController.text.trim();
-    String correo = _correoController.text.trim();
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        if (user == null) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-    String apiUrl = 'https://modisteria-back-production.up.railway.app/api/usuarios/updateUser/$id';
-    
-    try {
-      var response = await http.put(
-        Uri.parse(apiUrl),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode(<String, String>{
-          "nombre": nombre,
-          "email": correo,
-          "telefono": telefono,
-        }),
-      );
+        int id = user.id;
+        _nombreController.text = user.nombre;
+        _telefonoController.text = user.telefono;
 
-      if (response.statusCode == 201) {
-        // Éxito al editar
-        var jsonResponse = jsonDecode(response.body);
-        print('Respuesta del servidor: $jsonResponse');
-              
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Row(
-              mainAxisAlignment: MainAxisAlignment.start,
+        return Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
-                Icon(
-                  Icons.check_circle,
-                  color: Colors.white,
+                const Text(
+                  'Editar Información',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
                 ),
-                SizedBox(width: 5),
-                Text(
-                  "Su información se editó correctamente.",
-                  style: TextStyle(color: Colors.white),
-                )
+                const SizedBox(height: 20),
+                TextFormField(
+                  controller: _nombreController,
+                  decoration: InputDecoration(
+                    labelText: 'Nombre',
+                    hintText: 'Ingrese su nombre',
+                    hintStyle: const TextStyle(fontWeight: FontWeight.w600),
+                    fillColor: Colors.grey.shade200,
+                    focusedBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(
+                        width: 3,
+                        style: BorderStyle.solid,
+                        color: Colors.purple,
+                      ),
+                    ),
+                    enabledBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(width: 0, style: BorderStyle.none),
+                    ),
+                    filled: true,
+                  ),
+                  validator: (value) {
+                    if (value!.isEmpty) {
+                      return 'El nombre es necesario';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 15),
+                TextFormField(
+                  controller: _telefonoController,
+                  decoration: InputDecoration(
+                    labelText: 'Teléfono',
+                    hintText: 'Ingrese su teléfono',
+                    hintStyle: const TextStyle(fontWeight: FontWeight.w600),
+                    fillColor: Colors.grey.shade200,
+                    focusedBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(
+                        width: 3,
+                        style: BorderStyle.solid,
+                        color: Colors.purple,
+                      ),
+                    ),
+                    enabledBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(width: 0, style: BorderStyle.none),
+                    ),
+                    filled: true,
+                  ),
+                  validator: (value) {
+                    if (value!.isEmpty) {
+                      return 'El teléfono es necesario';
+                    }
+                    return null;
+                  },
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (_formKey.currentState!.validate()) {
+                      _editar(id);
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Editar'),
+                ),
               ],
             ),
-            duration: const Duration(milliseconds: 2000),
-            width: 300,
-            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(3.0),
-            ),
-            backgroundColor: const Color.fromARGB(255, 12, 195, 106),
           ),
         );
-        
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => Perfil()),
+      },
+    );
+  }
+
+  void _editar(int id) async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final user = userProvider.user;
+
+    if (user != null) {
+      String nombre = _nombreController.text.trim();
+      String telefono = _telefonoController.text.trim();
+
+      // Obtener el token almacenado en SharedPreferences
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString('x-token');
+
+      String apiUrl =
+          'https://modisteria-back-production.up.railway.app/api/usuarios/updateInfo/$id';
+
+      try {
+        var response = await http.put(
+          Uri.parse(apiUrl),
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8',
+            'x-token': token ?? '', // Incluir el token en el encabezado
+          },
+          body: jsonEncode(<String, String>{
+            "nombre": nombre,
+            "telefono": telefono,
+          }),
         );
 
-      } else {
-        // Manejo de error al editar
-        print('Error al editar: ${response.statusCode}');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: <Widget>[
-                Icon(
-                  Icons.indeterminate_check_box,
-                  color: Colors.white,
+        if (response.statusCode == 201) {
+          var jsonResponse = jsonDecode(response.body);
+          print('Respuesta del servidor: $jsonResponse');
+
+          // Mostrar mensaje de éxito
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: <Widget>[
+                  Icon(Icons.check_circle, color: Colors.white),
+                  SizedBox(width: 5),
+                  Text("Su información se editó correctamente.",
+                      style: TextStyle(color: Colors.white)),
+                ],
+              ),
+              duration: const Duration(milliseconds: 2000),
+              width: 300,
+              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(3.0),
+              ),
+              backgroundColor: const Color.fromARGB(255, 12, 195, 106),
+            ),
+          );
+
+          // Guardar el nuevo token si es devuelto
+          if (jsonResponse['token'] != null) {
+            await prefs.setString('x-token', jsonResponse['token']);
+          }
+
+          // Navegar al perfil
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => Perfil()),
+          );
+        } else {
+          print('Error al editar: ${response.statusCode}');
+          // Mostrar mensaje de error
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: <Widget>[
+                  Icon(Icons.indeterminate_check_box, color: Colors.white),
+                  SizedBox(width: 5),
+                  Text("Hubo un error al editar la información.",
+                      style: TextStyle(color: Colors.white)),
+                ],
+              ),
+              duration: const Duration(milliseconds: 2000),
+              width: 300,
+              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(3.0),
+              ),
+              backgroundColor: const Color.fromARGB(255, 241, 10, 10),
+            ),
+          );
+        }
+      } catch (e) {
+        print('Error al conectarse al servidor: $e');
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('Error'),
+              content: const Text('Error al conectar con el servidor.'),
+              actions: <Widget>[
+                TextButton(
+                  child: const Text('Aceptar'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
                 ),
-                SizedBox(width: 5),
-                Text(
-                  "Hubo un error al editar el domicilio",
-                  style: TextStyle(color: Colors.white),
-                )
               ],
-            ),
-            duration: const Duration(milliseconds: 2000),
-            width: 300,
-            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(3.0),
-            ),
-            backgroundColor: const Color.fromARGB(255, 241, 10, 10),
-          ),
+            );
+          },
         );
       }
-    } catch (e) {
-      // Manejo de error genérico
-      print('Error al conectarse al servidor: $e');
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Error'),
-            content: const Text('Error al conectar con el servidor.'),
-            actions: <Widget>[
-              TextButton(
-                child: const Text('OK'),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-            ],
-          );
-        },
-      );
     }
-    }
-
-}
+  }
 
 
   @override
