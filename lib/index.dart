@@ -5,6 +5,8 @@ import 'perfil.dart';
 import 'main.dart';
 import 'mostrarDomiciliosPorEstado.dart';
 import 'selectedItemPainter.dart';
+import 'providers/user_provider.dart';
+import 'package:provider/provider.dart';
 
 void main() {
   runApp(MyApp());
@@ -94,6 +96,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+
+    final userProvider = Provider.of<UserProvider>(context);
+    final user = userProvider.user;
+    
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 248, 248, 248),
       appBar: AppBar(

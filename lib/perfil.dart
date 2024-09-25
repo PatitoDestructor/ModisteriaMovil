@@ -67,6 +67,15 @@ class _PerfilState extends State<Perfil> {
                         backgroundImage: AssetImage('assets/img/user.png'),
                       ),
                       const SizedBox(height: 20),
+                      Text(
+                        user.nombre,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
                       Card(
                         color: Colors.white,
                         margin: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
@@ -81,10 +90,10 @@ class _PerfilState extends State<Perfil> {
                             mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              ListTile(
-                                leading: const Icon(Icons.person, color: Colors.purple),
+                            ListTile(
+                                leading: const Icon(Icons.key, color: Colors.purple),
                                 title: Text(
-                                  'Nombre: ${user.nombre}',
+                                  'ID: ${user.id}',
                                   style: const TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
@@ -113,9 +122,9 @@ class _PerfilState extends State<Perfil> {
                               ),
                               Divider(color: Colors.purple.shade100, thickness: 1),
                               ListTile(
-                                leading: const Icon(Icons.motorcycle, color: Colors.purple),
+                                leading: const Icon(Icons.recent_actors_outlined, color: Colors.purple),
                                 title: Text(
-                                  user.roleId == 1 ? 'Administrador' : user.roleId == 2 ? 'Cliente' : 'Domiciliario',
+                                  user.roleId == 1 ? 'USUARIO' : user.roleId == 2 ? 'ADMINISTRADOR' : user.roleId == 3 ? 'CLIENTE' : 'DOMICILIARIO',
                                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                                 ),
                               ),

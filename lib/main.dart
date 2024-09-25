@@ -63,7 +63,7 @@ void _login() async {
   if (_formKey.currentState!.validate()) {
     String email = _correoController.text.trim();
     String password = _contraController.text.trim();
-    String apiUrl = 'https://modisteria-back-production.up.railway.app/api/login';
+    String apiUrl = 'https://modisteria-back-production.up.railway.app/api/usuarios/login';
 
     try {
       var response = await http.post(
@@ -88,7 +88,13 @@ void _login() async {
         // Acceder a los datos del usuario dentro del campo 'payload'
         Map<String, dynamic> userData = decodedToken['payload'];
 
-        print('Datos del usuario decodificados: $userData');
+        print('ID: ${userData['id']}');
+        print('Email: ${userData['email']}');
+        print('Nombre: ${userData['nombre']}');
+        print('Telefono: ${userData['telefono']}');
+        print('Password: ${userData['password']}');
+        print('Direccion: ${userData['direccion']}');
+        print('Role: ${userData['role']}');
 
         // Verificar si el campo 'id' es nulo
         if (userData['id'] != null) {
@@ -98,8 +104,9 @@ void _login() async {
             nombre: userData['nombre'],
             email: userData['email'],
             telefono: userData['telefono'],
-            password: userData['contraseña'],
-            roleId: userData['role'],
+            password: userData['password'],  // Cambié de 'contraseña' a 'password'
+            direccion: userData['direccion'] ?? '',  // Manejar el caso nulo
+            roleId: userData['role']['id'],  // Acceder correctamente al campo id dentro de role
           );
 
           // Guardar los datos del usuario en el UserProvider
@@ -196,7 +203,6 @@ void _login() async {
     }
   }
 }
-
 
   @override
   Widget build(BuildContext context) {

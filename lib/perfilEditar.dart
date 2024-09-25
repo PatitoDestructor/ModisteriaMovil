@@ -194,7 +194,7 @@ void _editar(int id) async {
     String telefono = _telefonoController.text.trim();
     String correo = _correoController.text.trim();
 
-    String apiUrl = 'https://modisteria-back-production.up.railway.app/api/updateUser/$id';
+    String apiUrl = 'https://modisteria-back-production.up.railway.app/api/usuarios/updateUser/$id';
     
     try {
       var response = await http.put(

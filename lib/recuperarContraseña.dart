@@ -23,7 +23,7 @@ class _PasswordRecoveryPageState extends State<PasswordRecoveryPage> {
       
       final email = _emailController.text.trim();
       globalEmail = email;
-      String apiUrl = 'https://modisteria-back-production.up.railway.app/api/forgotPassword';
+      String apiUrl = 'https://modisteria-back-production.up.railway.app/api/usuarios/forgotPassword';
 
       try {
         var response = await http.post(
@@ -39,6 +39,8 @@ class _PasswordRecoveryPageState extends State<PasswordRecoveryPage> {
         setState(() {
           _isLoading = false;
         });
+
+        print(response.statusCode);
 
         if (response.statusCode == 200) {
           showModalBottomSheet(
@@ -246,7 +248,7 @@ class _CodeVerificationModalState extends State<CodeVerificationModal> {
 
       if (newPassword == confirmarPassword) {
 
-      String apiUrl = 'https://modisteria-back-production.up.railway.app/api/resetPassword';
+      String apiUrl = 'https://modisteria-back-production.up.railway.app/api/usuarios/resetPassword';
 
         try{
           var response = await http.post(
