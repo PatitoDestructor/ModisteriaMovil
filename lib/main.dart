@@ -8,6 +8,7 @@ import 'providers/user_provider.dart';
 import '../models/user.dart';
 import 'recuperarContraseña.dart';
 import 'package:jwt_decode/jwt_decode.dart';
+import 'package:awesome_dialog/awesome_dialog.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -79,26 +80,20 @@ void _login() async {
 
       if (response.statusCode == 200) {
         var jsonResponse = jsonDecode(response.body);
-        print('Respuesta del servidor: $jsonResponse');
-
-        // Decodificar el token JWT
         String token = jsonResponse['token'];
         Map<String, dynamic> decodedToken = Jwt.parseJwt(token);
 
-        // Acceder a los datos del usuario dentro del campo 'payload'
         Map<String, dynamic> userData = decodedToken['payload'];
 
-        print('ID: ${userData['id']}');
-        print('Email: ${userData['email']}');
-        print('Nombre: ${userData['nombre']}');
-        print('Telefono: ${userData['telefono']}');
-        print('Password: ${userData['password']}');
-        print('Direccion: ${userData['direccion']}');
-        print('Role: ${userData['role']}');
+        // print('ID: ${userData['id']}');
+        // print('Email: ${userData['email']}');
+        // print('Nombre: ${userData['nombre']}');
+        // print('Telefono: ${userData['telefono']}');
+        // print('Password: ${userData['password']}');
+        // print('Direccion: ${userData['direccion']}');
+        // print('Role: ${userData['role']}');
 
-        // Verificar si el campo 'id' es nulo
         if (userData['id'] != null) {
-          // Crear un objeto User con los datos del token decodificado
           User user = User(
             id: userData['id'],
             nombre: userData['nombre'],
@@ -109,54 +104,40 @@ void _login() async {
             roleId: userData['role']['id'],
           );
 
-          // Guardar los datos del usuario en el UserProvider
           Provider.of<UserProvider>(context, listen: false).saveUser(user);
-          // Guardar el token en SharedPreferences
+
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('x-token', token);
 
           verificarToken();
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: <Widget>[
-                  Icon(
-                    Icons.check_circle,
-                    color: Colors.white,
-                  ),
-                  SizedBox(width: 5),
-                  Text(
-                    "Bienvenido querido usuario",
-                    style: TextStyle(color: Colors.white),
-                  )
-                ],
-              ),
-              duration: const Duration(milliseconds: 2000),
-              width: 300,
-              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10),
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(3.0),
-              ),
-              backgroundColor: const Color.fromARGB(255, 12, 195, 106),
-            ),
-          );
+          AwesomeDialog(
+              context: context,
+              dialogType: DialogType.success,
+              animType: AnimType.scale,
+              showCloseIcon: false,
+              title: "Bienvenido",
+              dialogBackgroundColor	: const Color.fromRGBO(255, 255, 255, 1),
+              barrierColor: const Color.fromARGB(147, 26, 26, 26),
+              desc: "Inicio Sesión Correcto, Bienvenido querido Usuario...",
+              headerAnimationLoop: true,
+              btnOkOnPress: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => MyHomePage()),
+              );
+              },
+              descTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 18),
+              buttonsBorderRadius : const BorderRadius.all(Radius.circular(500)),
+              titleTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 24)
+            ).show();
 
           final prefes = await SharedPreferences.getInstance();
           await prefs.setBool('loggedIn', true);
-
-          // Navega al dashboard
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => MyHomePage()),
-          );
         } else {
           print('Error: El campo "id" es nulo');
         }
       } else {
-        // Manejo de error en el inicio de sesión
         print('Error de inicio de sesión: ${response.statusCode}');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -186,7 +167,6 @@ void _login() async {
         );
       }
     } catch (e) {
-      // Manejo de error genérico
       print('Error al conectarse al servidor: $e');
       showDialog(
         context: context,
@@ -211,7 +191,7 @@ void _login() async {
 
 Future<void> verificarToken() async {
   final prefs = await SharedPreferences.getInstance();
-  String? tokenGuardado = prefs.getString('x-token'); // Verificar el 'x-token'
+  String? tokenGuardado = prefs.getString('x-token');
 
   if (tokenGuardado != null) {
     print('Token guardado: $tokenGuardado');
@@ -346,7 +326,7 @@ Future<void> verificarToken() async {
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
-                            color: Colors.purple, // Cambia el color si lo deseas
+                            color: Colors.purple,
                           ),
                         ),
                       ),

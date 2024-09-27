@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 import 'providers/user_provider.dart';
 import 'perfil.dart';
+import 'package:awesome_dialog/awesome_dialog.dart';
 
 class NewPasswordPage extends StatefulWidget {
   @override
@@ -47,33 +48,27 @@ class _NewPasswordPageState extends State<NewPasswordPage> {
 
           if (response.statusCode == 200) {
             var jsonResponse = jsonDecode(response.body);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: <Widget>[
-                    const Icon(Icons.check_circle, color: Colors.white),
-                    const SizedBox(width: 5),
-                    Text(
-                      jsonResponse['msg'] ?? "La contraseña se actualizó",
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                  ],
-                ),
-                duration: const Duration(milliseconds: 2000),
-                width: 300,
-                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10),
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(3.0),
-                ),
-                backgroundColor: const Color.fromARGB(255, 12, 195, 106),
-              ),
-            );
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => Perfil()),
-            );
+
+                AwesomeDialog(
+                  context: context,
+                  dialogType: DialogType.success,
+                  animType: AnimType.scale,
+                  showCloseIcon: false,
+                  title: "Correcto",
+                  dialogBackgroundColor	: const Color.fromRGBO(255, 255, 255, 1),
+                  barrierColor: const Color.fromARGB(147, 26, 26, 26),
+                  desc: "La Contraseña se actualizó correctamente.",
+                  headerAnimationLoop: true,
+                  btnOkOnPress: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => Perfil()),
+                  );
+                  },
+                  descTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 18),
+                  buttonsBorderRadius : const BorderRadius.all(Radius.circular(500)),
+                  titleTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 24)
+                ).show();
           } else {
             var jsonResponse = jsonDecode(response.body);
             _showErrorSnackbar(jsonResponse['msg'] ?? "Error al actualizar la contraseña");
@@ -88,29 +83,21 @@ class _NewPasswordPageState extends State<NewPasswordPage> {
   }
 
   void _showErrorSnackbar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: <Widget>[
-            const Icon(Icons.indeterminate_check_box, color: Colors.white),
-            const SizedBox(width: 5),
-            Text(
-              message,
-              style: const TextStyle(color: Colors.white),
-            ),
-          ],
-        ),
-        duration: const Duration(milliseconds: 2000),
-        width: 300,
-        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(3.0),
-        ),
-        backgroundColor: const Color.fromARGB(255, 241, 10, 10),
-      ),
-    );
+        AwesomeDialog(
+          context: context,
+          dialogType: DialogType.error,
+          animType: AnimType.scale,
+          showCloseIcon: false,
+          title: "Ups...",
+          dialogBackgroundColor	: const Color.fromRGBO(255, 255, 255, 1),
+          barrierColor: const Color.fromARGB(147, 26, 26, 26),
+          desc: message,
+          btnCancelOnPress: () {},
+          autoHide: const Duration(seconds: 4),
+          descTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 18),
+          buttonsBorderRadius : const BorderRadius.all(Radius.circular(500)),
+          titleTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 24)
+        ).show();
   }
 
   void _showErrorDialog(String message) {

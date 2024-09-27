@@ -184,7 +184,7 @@ void _showPasswordModal(BuildContext context) {
                         child: IconButton(
                           icon: Icon(Icons.close),
                           onPressed: () {
-                            Navigator.of(context).pop(); // Cierra el modal
+                            Navigator.of(context).pop();
                           },
                         ),
                       ),
@@ -283,7 +283,7 @@ void _showPasswordModal(BuildContext context) {
                               ),
                             ),
                             ListTile(
-                              leading: Icon(Icons.lock, color: Colors.purple),
+                              leading: const Icon(Icons.lock, color: Colors.purple),
                               title: const Text(
                                 'Contraseña: ********',
                                 style: TextStyle(
@@ -293,7 +293,7 @@ void _showPasswordModal(BuildContext context) {
                               ),
                               trailing: GestureDetector(
                                 onTap: () {
-                                  _showPasswordModal(context); // Muestra el modal
+                                  _showPasswordModal(context);
                                 },
                                 child: const CircleAvatar(
                                   backgroundColor: Colors.black,

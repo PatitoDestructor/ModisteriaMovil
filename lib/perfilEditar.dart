@@ -8,6 +8,7 @@ import 'perfil.dart';
 import 'selectedItemPainter.dart';
 import 'package:provider/provider.dart';
 import 'providers/user_provider.dart';
+import 'package:awesome_dialog/awesome_dialog.dart';
 
 class EditarPerfil extends StatefulWidget {
   const EditarPerfil({Key? key}) : super(key: key);
@@ -163,7 +164,7 @@ class _EditarPerfilState extends State<EditarPerfil> {
           Uri.parse(apiUrl),
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
-            'x-token': token ?? '', // Incluir el token en el encabezado
+            'x-token': token ?? '',
           },
           body: jsonEncode(<String, String>{
             "nombre": nombre,
@@ -176,38 +177,30 @@ class _EditarPerfilState extends State<EditarPerfil> {
           print('Respuesta del servidor: $jsonResponse');
 
           // Mostrar mensaje de éxito
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: <Widget>[
-                  Icon(Icons.check_circle, color: Colors.white),
-                  SizedBox(width: 5),
-                  Text("Su información se editó correctamente.",
-                      style: TextStyle(color: Colors.white)),
-                ],
-              ),
-              duration: const Duration(milliseconds: 2000),
-              width: 300,
-              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10),
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(3.0),
-              ),
-              backgroundColor: const Color.fromARGB(255, 12, 195, 106),
-            ),
-          );
+          AwesomeDialog(
+              context: context,
+              dialogType: DialogType.success,
+              animType: AnimType.scale,
+              showCloseIcon: false,
+              title: "Correcto",
+              dialogBackgroundColor	: const Color.fromRGBO(255, 255, 255, 1),
+              barrierColor: const Color.fromARGB(147, 26, 26, 26),
+              desc: "Tu Información se actualizó Correctamente.",
+              headerAnimationLoop: true,
+              btnOkOnPress: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => Perfil()),
+                );
+              },
+              descTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 18),
+              buttonsBorderRadius : const BorderRadius.all(Radius.circular(500)),
+              titleTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 24)
+          ).show();
 
-          // Guardar el nuevo token si es devuelto
           if (jsonResponse['token'] != null) {
             await prefs.setString('x-token', jsonResponse['token']);
           }
-
-          // Navegar al perfil
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => Perfil()),
-          );
         } else {
           print('Error al editar: ${response.statusCode}');
           // Mostrar mensaje de error

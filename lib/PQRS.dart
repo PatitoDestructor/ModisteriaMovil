@@ -1,6 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:provider/provider.dart';
+import 'providers/user_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'index.dart';
+import 'package:awesome_dialog/awesome_dialog.dart';
 
 class PQRSForm extends StatefulWidget {
+
+  final int domicilioId; // Añadir esta línea
+
+  PQRSForm({required this.domicilioId});
+
   @override
   _PQRSFormState createState() => _PQRSFormState();
 }
@@ -23,11 +35,112 @@ class _PQRSFormState extends State<PQRSForm> {
     super.dispose();
   }
 
+  void enviarPQRS() async {
+    String tipoPQRS = _selectedTipo!;
+    String motivo = _motivoController.text;
+    String apiUrl = 'https://modisteria-back-production.up.railway.app/api/pqrs/createPQRS';
+
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final user = userProvider.user;
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('x-token');
+
+    try{
+
+      var response = await http.post(
+        Uri.parse(apiUrl),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'x-token': token ?? '',
+        },
+        body: jsonEncode(<String, dynamic>{
+          'tipo': tipoPQRS,
+          'motivo': motivo,
+          'usuarioId': user!.id,
+          'domicilioId': widget.domicilioId
+        }),
+      );
+
+      if(response.statusCode == 201){
+
+        AwesomeDialog(
+          context: context,
+          dialogType: DialogType.success,
+          animType: AnimType.scale,
+          showCloseIcon: false,
+          title: "Se envió tu P.Q.R.S ",
+          dialogBackgroundColor	: const Color.fromRGBO(255, 255, 255, 1),
+          barrierColor: const Color.fromARGB(147, 26, 26, 26),
+          desc: "Estaremos pendientes a tus nuevas Recomendaciones.",
+          headerAnimationLoop: true,
+          btnOkOnPress: () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => MyHomePage()),
+          );
+          },
+          descTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 18),
+          buttonsBorderRadius : const BorderRadius.all(Radius.circular(500)),
+          titleTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 24)
+        ).show();
+
+      }else{
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: <Widget>[
+                Icon(
+                  Icons.indeterminate_check_box,
+                  color: Colors.white,
+                ),
+                SizedBox(width: 5),
+                Text(
+                  "Error al enviar la P.Q.R.S",
+                  style: TextStyle(color: Colors.white),
+                )
+              ],
+            ),
+            duration: const Duration(milliseconds: 2000),
+            width: 300,
+            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(3.0),
+            ),
+            backgroundColor: const Color.fromARGB(255, 241, 10, 10),
+          ),
+        );
+      }
+
+    }catch(e){
+      print('Error al conectarse al servidor: $e');
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Error'),
+            content: const Text('Error al conectar con el servidor.'),
+            actions: <Widget>[
+              TextButton(
+                child: const Text('OK'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Formulario P.Q.R.S'),
+        title: Text('P.Q.R.S para el Domicilio #${widget.domicilioId}'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -127,19 +240,7 @@ class _PQRSFormState extends State<PQRSForm> {
                     child: ElevatedButton(
                       onPressed: () {
                         if (_formKey.currentState!.validate()) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.thumb_up, color: Colors.white),
-                                  SizedBox(width: 10),
-                                  Text('¡Formulario enviado con éxito!'),
-                                ],
-                              ),
-                              backgroundColor: Colors.green,
-                            ),
-                          );
+                          enviarPQRS();
                         }
                       },
                       style: ElevatedButton.styleFrom(
@@ -185,6 +286,6 @@ class _PQRSFormState extends State<PQRSForm> {
 
 void main() {
   runApp(MaterialApp(
-    home: PQRSForm(),
+    home: PQRSForm(domicilioId: 1),
   ));
 }

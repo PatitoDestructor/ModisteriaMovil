@@ -8,12 +8,10 @@ Future<List<dynamic>> obtenerDomicilios(String estado, int id) async {
   String? token = prefs.getString('x-token');
   String url;
 
-  if(id == 3){
-    url = "https://modisteria-back-production.up.railway.app/api/domicilios/getDomiciliosByCliente/$id";
-  }else if(id == 4){
+  if(id == 4){
     url = "https://modisteria-back-production.up.railway.app/api/domicilios/getDomiciliosByDomiciliario/$id";
   }else{
-    url = "https://modisteria-back-production.up.railway.app/api/domicilios/getAllDomicilios";
+    url = "https://modisteria-back-production.up.railway.app/api/domicilios/getDomiciliosByCliente/$id";
   }
 
   final response = await http.get(
@@ -26,8 +24,6 @@ Future<List<dynamic>> obtenerDomicilios(String estado, int id) async {
 
   if (response.statusCode == 200) {
     final jsonData = json.decode(response.body);
-    print(id);
-    print(url);
     return jsonData; // Retorna los domicilios
   } else {
     print(response.statusCode);

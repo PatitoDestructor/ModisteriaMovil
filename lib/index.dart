@@ -7,6 +7,9 @@ import 'providers/user_provider.dart';
 import 'package:provider/provider.dart';
 import 'domicilio.dart';
 import 'PQRS.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:awesome_dialog/awesome_dialog.dart';
 
 void main() {
   runApp(MyApp());
@@ -23,7 +26,7 @@ class MyApp extends StatelessWidget {
       home: MyHomePage(),
       routes: {
         '/perfil': (context) => Perfil(), // Ruta hacia Perfil
-        '/main': (context) => RegisterPage(), // Ruta hacia Login
+        '/main': (context) => const RegisterPage(), // Ruta hacia Login
       },
     );
   }
@@ -35,7 +38,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  String _selectedEstado = 'Seleccione una opción';
+  final _selectedEstado = 'Seleccione una opción';
   int _selectedIndex = 0;
   List<dynamic> _domicilios = [];
   bool _isLoading = true;
@@ -69,37 +72,26 @@ class _MyHomePageState extends State<MyHomePage> {
   final prefs = await SharedPreferences.getInstance();
   await prefs.clear();
 
-  ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: <Widget>[
-            Icon(
-              Icons.check_circle,
-              color: Colors.white,
-            ),
-            SizedBox(width: 5),
-            Text(
-              "Sesión cerrada correctamente",
-              style: TextStyle(color: Colors.white),
-            )
-          ],
-        ),
-        duration: const Duration(seconds: 2),
-        width: 300,
-        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(3.0),
-        ),
-        backgroundColor: const Color.fromARGB(255, 12, 195, 106),
-      ),
-    );
-
-  Navigator.of(context).pushAndRemoveUntil(
-    MaterialPageRoute(builder: (context) => RegisterPage()),
-    (Route<dynamic> route) => false,
-  );
+    AwesomeDialog(
+        context: context,
+        dialogType: DialogType.success,
+        animType: AnimType.scale,
+        showCloseIcon: false,
+        title: "Hasta Pronto",
+        dialogBackgroundColor	: const Color.fromRGBO(255, 255, 255, 1),
+        barrierColor: const Color.fromARGB(147, 26, 26, 26),
+        desc: "Cerraste sesión correctamente.",
+        headerAnimationLoop: true,
+        btnOkOnPress: () {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => const RegisterPage()),
+            (Route<dynamic> route) => false,
+          );
+        },
+        descTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 18),
+        buttonsBorderRadius : const BorderRadius.all(Radius.circular(500)),
+        titleTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 24)
+    ).show();
 }
 
 void _fetchDomicilios() async {
@@ -146,6 +138,220 @@ Color _getColorByNovedad(String novedad){
   }
 }
 
+void _showEditModal(BuildContext context, Map domicilio) {
+  final _formKey = GlobalKey<FormState>();
+  String? _selectedEstado;
+  final _novedadesController = TextEditingController();
+  bool _isNovedadesValid = false;
+
+  void _validateNovedades(String value) {
+    _isNovedadesValid = value.length >= 10;
+  }
+
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
+        ),
+        elevation: 16,
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          height: 470, // Ajusta la altura según sea necesario
+          width: 500,
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: <Widget>[
+                Align(
+                  alignment: Alignment.topRight,
+                  child: IconButton(
+                    icon: const Icon(Icons.close, color: Colors.black),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ),
+                Text(
+                  'Editar Domicilio #${domicilio['id']}',
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                const Divider(),
+                const SizedBox(height: 10),
+                DropdownButtonFormField<String>(
+                  value: _selectedEstado,
+                  decoration: InputDecoration(
+                    labelText: 'Estado',
+                    fillColor: Colors.grey.shade200,
+                    focusedBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(
+                          width: 3, style: BorderStyle.solid, color: Colors.purple),
+                    ),
+                    enabledBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(width: 0, style: BorderStyle.none),
+                    ),
+                    filled: true,
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: '6', child: Text('Entregado')),
+                    DropdownMenuItem(value: '3', child: Text('Pendiente')),
+                    DropdownMenuItem(value: '8', child: Text('Cancelado')),
+                  ],
+                  onChanged: (newValue) {
+                    _selectedEstado = newValue;
+                  },
+                  validator: (value) {
+                    if (value == null) {
+                      return 'Selecciona un estado';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 15),
+                TextFormField(
+                  controller: _novedadesController,
+                  maxLines: 5, // Esto convierte el campo en un área de texto
+                  decoration: InputDecoration(
+                    labelText: 'Novedades',
+                    hintText: 'Escribe al menos 10 caracteres',
+                    fillColor: Colors.grey.shade200,
+                    focusedBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(
+                          width: 3, style: BorderStyle.solid, color: Colors.purple),
+                    ),
+                    enabledBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(width: 0, style: BorderStyle.none),
+                    ),
+                    filled: true,
+                  ),
+                  onChanged: _validateNovedades,
+                ),
+                const SizedBox(height: 30),
+                ElevatedButton(
+                  onPressed: () async {
+
+                    if (_formKey.currentState!.validate()) {
+                      String novedad = _novedadesController.text;
+                      String estadoString = _selectedEstado!;
+                      int estadoId = int.parse(estadoString);
+                      int domicilioId = domicilio['id'];
+                      String apiUrl = 'https://modisteria-back-production.up.railway.app/api/domicilios/updateDomicilio/$domicilioId';
+
+                      SharedPreferences prefs = await SharedPreferences.getInstance();
+                      String? token = prefs.getString('x-token');
+
+                      try{
+                          var response = await http.put(
+                          Uri.parse(apiUrl),
+                          headers: <String, String>{
+                            'Content-Type': 'application/json; charset=UTF-8',
+                            'x-token': token ?? '',
+                          },
+                          body: jsonEncode(<String, dynamic>{
+                            'novedades': novedad,
+                            'estadoId': estadoId,
+                          }),
+                        );
+
+                        if(response.statusCode == 201){
+
+                          AwesomeDialog(
+                            context: context,
+                            dialogType: DialogType.success,
+                            animType: AnimType.scale,
+                            showCloseIcon: false,
+                            title: "Correcto",
+                            dialogBackgroundColor	: const Color.fromRGBO(255, 255, 255, 1),
+                            barrierColor: const Color.fromARGB(147, 26, 26, 26),
+                            desc: "El Domicilio se editó correctamente.",
+                            headerAnimationLoop: true,
+                            btnOkOnPress: () {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(builder: (context) => MyHomePage()),
+                              );
+                            },
+                            descTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 18),
+                            buttonsBorderRadius : const BorderRadius.all(Radius.circular(500)),
+                            titleTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 24)
+                          ).show();
+
+                        }else{
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: const Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: <Widget>[
+                                  Icon(
+                                    Icons.indeterminate_check_box,
+                                    color: Colors.white,
+                                  ),
+                                  SizedBox(width: 5),
+                                  Text(
+                                    "Error al editar el Domicilio",
+                                    style: TextStyle(color: Colors.white),
+                                  )
+                                ],
+                              ),
+                              duration: const Duration(milliseconds: 2000),
+                              width: 300,
+                              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10),
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(3.0),
+                              ),
+                              backgroundColor: const Color.fromARGB(255, 241, 10, 10),
+                            ),
+                          );
+                        }
+
+                      }catch(e){
+                        print('Error al conectarse al servidor: $e');
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: const Text('Error'),
+                              content: const Text('Error al conectar con el servidor.'),
+                              actions: <Widget>[
+                                TextButton(
+                                  child: const Text('OK'),
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      }
+                    }
+
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.purple,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text('Editar'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -160,7 +366,7 @@ Color _getColorByNovedad(String novedad){
           children: [
             Text(
               user!.roleId == 4 ? 'Mis Domicilios': 'Mis Pedidos',
-              style: TextStyle(fontSize: 35, fontWeight: FontWeight.bold, color: Colors.black),
+              style: const TextStyle(fontSize: 35, fontWeight: FontWeight.bold, color: Colors.black),
             ),
             const SizedBox(width: 20),
             SizedBox(
@@ -183,7 +389,7 @@ Color _getColorByNovedad(String novedad){
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             _isLoading
-              ? const Center(child: CircularProgressIndicator()) // Muestra un indicador de carga mientras se cargan los datos
+              ? const Center(child: CircularProgressIndicator())
               : Expanded(
                   child: ListView.builder(
                     itemCount: _domicilios.length,
@@ -224,9 +430,10 @@ Color _getColorByNovedad(String novedad){
                                   color: _getColorByEstadoId(domicilio['estadoId']),
                                 ),
                               ),
-                              SizedBox(height: 8),
+                              const SizedBox(height: 8),
                               Row(
                                 children: [
+                                  if (user.roleId == 4)
                                   ElevatedButton(
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.black,
@@ -235,7 +442,7 @@ Color _getColorByNovedad(String novedad){
                                         borderRadius: BorderRadius.circular(15),
                                       ),
                                       padding:
-                                          EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                          const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                                     ),
                                     onPressed: () {
                                       // Mostrar modal con información del pedido
@@ -248,15 +455,15 @@ Color _getColorByNovedad(String novedad){
                                           ),
                                           elevation: 16,
                                           child: Container(
-                                            padding: EdgeInsets.all(20),
-                                            height: 550, // Ajusta la altura según sea necesario
+                                            padding: const EdgeInsets.all(20),
+                                            height: 550,
                                             width: 500,
                                             child: Column(
                                               children: <Widget>[
                                                 Align(
                                                   alignment: Alignment.topRight,
                                                   child: IconButton(
-                                                    icon: Icon(Icons.close, color: Colors.black),
+                                                    icon: const Icon(Icons.close, color: Colors.black),
                                                     onPressed: () {
                                                       Navigator.of(context).pop();
                                                     },
@@ -270,49 +477,62 @@ Color _getColorByNovedad(String novedad){
                                                     color: Colors.black,
                                                   ),
                                                 ),
-                                                SizedBox(height: 10),
-                                                Divider(),
-                                                SizedBox(height: 10),
+                                                const SizedBox(height: 10),
+                                                const Divider(),
+                                                const SizedBox(height: 10),
                                                 Expanded(
                                                   child: ListView.builder(
                                                     itemCount: cotizacionPedidos.length,
                                                     itemBuilder: (context, pedidoIndex) {
                                                       final pedido = cotizacionPedidos[pedidoIndex]['pedido'];
                                                       return Card(
-                                                        margin: EdgeInsets.symmetric(vertical: 8),
+                                                        margin: const EdgeInsets.symmetric(vertical: 8),
                                                         elevation: 4,
                                                         shape: RoundedRectangleBorder(
                                                           borderRadius: BorderRadius.circular(10),
                                                         ),
                                                         child: ListTile(
-                                                          title: Text(
-                                                            'Pedido ID: ${pedido['idPedido']}',
-                                                            style: TextStyle(
-                                                              fontWeight: FontWeight.bold,
-                                                              color: Colors.grey,
-                                                              fontSize: 18,
-                                                            ),
-                                                          ),
+                                                          title: RichText(
+                                                                text: TextSpan(
+                                                                  children: [
+                                                                    const TextSpan(
+                                                                      text: 'Pedido ID: ',
+                                                                      style: TextStyle(
+                                                                        fontSize: 18,
+                                                                        color: Colors.black,
+                                                                        fontWeight: FontWeight.bold,
+                                                                      ),
+                                                                    ),
+                                                                    TextSpan(
+                                                                      text: '${pedido['idPedido']}',
+                                                                      style: const TextStyle(
+                                                                        fontSize: 18,
+                                                                        color: Color.fromARGB(255, 71, 71, 71),
+                                                                      ),
+                                                                    ),
+                                                                  ],
+                                                                ),
+                                                              ),
                                                           subtitle: Column(
                                                             crossAxisAlignment: CrossAxisAlignment.start,
                                                             children: [
-                                                              SizedBox(height: 5),
+                                                              const SizedBox(height: 5),
                                                               RichText(
                                                                 text: TextSpan(
                                                                   children: [
-                                                                    TextSpan(
+                                                                    const TextSpan(
                                                                       text: 'Talla: ',
                                                                       style: TextStyle(
                                                                         fontSize: 16,
-                                                                        color: Colors.purple, // Color para "Talla:"
+                                                                        color: Colors.purple, 
                                                                         fontWeight: FontWeight.bold,
                                                                       ),
                                                                     ),
                                                                     TextSpan(
                                                                       text: '${pedido['talla']}',
-                                                                      style: TextStyle(
+                                                                      style: const TextStyle(
                                                                         fontSize: 16,
-                                                                        color: Colors.black, // Color para el valor de "Talla"
+                                                                        color: Colors.black,
                                                                       ),
                                                                     ),
                                                                   ],
@@ -321,7 +541,7 @@ Color _getColorByNovedad(String novedad){
                                                               RichText(
                                                                 text: TextSpan(
                                                                   children: [
-                                                                    TextSpan(
+                                                                    const TextSpan(
                                                                       text: 'Cantidad: ',
                                                                       style: TextStyle(
                                                                         fontSize: 16,
@@ -331,7 +551,7 @@ Color _getColorByNovedad(String novedad){
                                                                     ),
                                                                     TextSpan(
                                                                       text: '${pedido['cantidad']}',
-                                                                      style: TextStyle(
+                                                                      style: const TextStyle(
                                                                         fontSize: 16,
                                                                         color: Colors.black, // Color para el valor de "Cantidad"
                                                                       ),
@@ -342,7 +562,7 @@ Color _getColorByNovedad(String novedad){
                                                               RichText(
                                                                 text: TextSpan(
                                                                   children: [
-                                                                    TextSpan(
+                                                                    const TextSpan(
                                                                       text: 'Usuario: ',
                                                                       style: TextStyle(
                                                                         fontSize: 16,
@@ -352,7 +572,7 @@ Color _getColorByNovedad(String novedad){
                                                                     ),
                                                                     TextSpan(
                                                                       text: '${pedido['usuario']['nombre']}',
-                                                                      style: TextStyle(
+                                                                      style: const TextStyle(
                                                                         fontSize: 16,
                                                                         color: Colors.black, // Color para el valor de "Usuario"
                                                                       ),
@@ -360,7 +580,7 @@ Color _getColorByNovedad(String novedad){
                                                                   ],
                                                                 ),
                                                               ),
-                                                              SizedBox(height: 5),
+                                                              const SizedBox(height: 5),
                                                             ],
                                                           ),
                                                         ),
@@ -378,9 +598,9 @@ Color _getColorByNovedad(String novedad){
                                     },
                                     child: const Text('Pedido Info'),
                                   ),
-                                  Spacer(),
+                                  const Spacer(),
 
-                                  if (user.roleId == 4) // Muestra el botón "Editar" para roleId 1
+                                  if (user.roleId == 4)
                                     ElevatedButton(
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: Colors.purple,
@@ -388,10 +608,10 @@ Color _getColorByNovedad(String novedad){
                                         shape: RoundedRectangleBorder(
                                           borderRadius: BorderRadius.circular(15),
                                         ),
-                                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                                       ),
                                       onPressed: () {
-                                        // Acción de edición del domicilio
+                                        _showEditModal(context, domicilio);
                                       },
                                       child: const Icon(Icons.edit, size: 18),
                                     )
@@ -403,12 +623,14 @@ Color _getColorByNovedad(String novedad){
                                         shape: RoundedRectangleBorder(
                                           borderRadius: BorderRadius.circular(15),
                                         ),
-                                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                                       ),
                                       onPressed: () {
                                         Navigator.push(
                                           context,
-                                          MaterialPageRoute(builder: (context) => PQRSForm()),
+                                          MaterialPageRoute(
+                                            builder: (context) => PQRSForm(domicilioId: domicilio['id']),
+                                          ),
                                         );
                                       },
                                       child: const Icon(Icons.add_call, size: 18),

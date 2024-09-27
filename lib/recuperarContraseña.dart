@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'main.dart';
+import 'package:awesome_dialog/awesome_dialog.dart';
 
 String globalEmail = '';
 
@@ -118,11 +119,11 @@ class _PasswordRecoveryPageState extends State<PasswordRecoveryPage> {
     return Scaffold(
     appBar: AppBar(
         backgroundColor: Colors.transparent,
-        elevation: 0, // Hace que el AppBar sea transparente
+        elevation: 0, 
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () {
-            Navigator.of(context).pop(); // Volver a la pantalla anterior
+            Navigator.of(context).pop();
           },
         ),
       ),
@@ -136,7 +137,7 @@ class _PasswordRecoveryPageState extends State<PasswordRecoveryPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Image.asset(
-                      'assets/img/restablecer.png', // Agrega tu logo aquí
+                      'assets/img/restablecer.png',
                       height: 100,
                     ),
                     const SizedBox(height: 40),
@@ -264,43 +265,28 @@ class _CodeVerificationModalState extends State<CodeVerificationModal> {
         );
 
         if (response.statusCode == 200) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => RegisterPage()),
-        );
-
-          ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: <Widget>[
-                    Icon(
-                      Icons.check_circle,
-                      color: Colors.white,
-                    ),
-                    SizedBox(width: 5),
-                    Text(
-                      "La contraseña se actualizó",
-                      style: TextStyle(color: Colors.white),
-                    )
-                  ],
-                ),
-                duration: const Duration(milliseconds: 2000),
-                width: 300,
-                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10),
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(3.0),
-                ),
-                backgroundColor: const Color.fromARGB(255, 12, 195, 106),
-              ),
-            );
+          AwesomeDialog(
+              context: context,
+              dialogType: DialogType.success,
+              animType: AnimType.scale,
+              showCloseIcon: false,
+              title: "Se actualizó tu Contraseña",
+              dialogBackgroundColor	: const Color.fromRGBO(255, 255, 255, 1),
+              barrierColor: const Color.fromARGB(147, 26, 26, 26),
+              desc: "Tu Contraseña fue cambiada, no la olvides de nuevo.",
+              headerAnimationLoop: true,
+              btnOkOnPress: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const RegisterPage()),
+                );
+              },
+              descTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 18),
+              buttonsBorderRadius : const BorderRadius.all(Radius.circular(500)),
+              titleTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 24)
+            ).show();
         }
         else{
-          print('Error al validar el código: ${response.statusCode}');
-          print('Correo: ${globalEmail}');
-          print('Código: ${code}');
-          print('nueva contraseña: ${newPassword}');
           ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: const Row(
