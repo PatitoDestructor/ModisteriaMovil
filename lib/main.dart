@@ -334,7 +334,7 @@ Future<void> verificarToken() async {
                     Container(
                       margin: const EdgeInsets.only(bottom: 0),
                       child: const Text(
-                        'O continua con',
+                        'O Registrate en la Web',
                         style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
@@ -348,7 +348,7 @@ Future<void> verificarToken() async {
                         onPressed: () {},
                         child: const Image(
                           image: NetworkImage(
-                              'https://image.similarpng.com/very-thumbnail/2020/06/Logo-google-icon-PNG.png'),
+                              'https://w7.pngwing.com/pngs/639/449/png-transparent-computer-icons-website-icon-text-globe-symmetry.png'),
                           height: 25,
                         ),
                       ),

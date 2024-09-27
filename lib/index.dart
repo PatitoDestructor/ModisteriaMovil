@@ -103,7 +103,7 @@ void _fetchDomicilios() async {
   });
 
   try {
-    List<dynamic> domicilios = await obtenerDomicilios(_selectedEstado, user!.id);
+    List<dynamic> domicilios = await obtenerDomicilios(_selectedEstado, user!.id, user!.roleId);
     setState(() {
       _domicilios = domicilios;
       _isLoading = false; // Finalizar la carga
@@ -563,7 +563,7 @@ void _showEditModal(BuildContext context, Map domicilio) {
                                                                 text: TextSpan(
                                                                   children: [
                                                                     const TextSpan(
-                                                                      text: 'Usuario: ',
+                                                                      text: 'Para: ',
                                                                       style: TextStyle(
                                                                         fontSize: 16,
                                                                         color: Colors.purple, // Color para "Usuario:"
@@ -581,9 +581,33 @@ void _showEditModal(BuildContext context, Map domicilio) {
                                                                 ),
                                                               ),
                                                               const SizedBox(height: 5),
+                                                              RichText(
+                                                                text: TextSpan(
+                                                                  children: [
+                                                                    const TextSpan(
+                                                                      text: 'Dirección: ',
+                                                                      style: TextStyle(
+                                                                        fontSize: 16,
+                                                                        color: Colors.purple, // Color para "Usuario:"
+                                                                        fontWeight: FontWeight.bold,
+                                                                      ),
+                                                                    ),
+                                                                    TextSpan(
+                                                                      text: pedido['usuario']['direccion'] != null ? '${pedido['usuario']['direccion']}': 'No Especificada',
+                                                                      style: const TextStyle(
+                                                                        fontSize: 16,
+                                                                        color: Colors.black, // Color para el valor de "Usuario"
+                                                                      ),
+                                                                    ),
+                                                                  ],
+                                                                ),
+                                                              ),
+                                                              const SizedBox(height: 5),
                                                             ],
                                                           ),
+                                                            
                                                         ),
+                                                        
                                                       );
                                                     },
                                                   ),
@@ -639,6 +663,7 @@ void _showEditModal(BuildContext context, Map domicilio) {
                               ),
                             ],
                           ),
+                          leading: Image.network(cotizacion['imagen'] == null ? 'https://png.pngtree.com/png-vector/20220119/ourmid/pngtree-crossed-image-icon-picture-not-available-sign-photo-sign-icon-vector-png-image_44027862.jpg' : cotizacion['imagen'] ),
                         ),
                       );
                     },

@@ -3,15 +3,15 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // Función para obtener la lista de domicilios
-Future<List<dynamic>> obtenerDomicilios(String estado, int id) async {
+Future<List<dynamic>> obtenerDomicilios(String estado, int id, int roleId) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   String? token = prefs.getString('x-token');
   String url;
 
-  if(id == 4){
+  if(roleId == 4){
     url = "https://modisteria-back-production.up.railway.app/api/domicilios/getDomiciliosByDomiciliario/$id";
   }else{
-    url = "https://modisteria-back-production.up.railway.app/api/domicilios/getDomiciliosByCliente/$id";
+    url = "https://modisteria-back-production.up.railway.app/api/domicilios/getDomiciliosByClienteId/$id";
   }
 
   final response = await http.get(
@@ -24,6 +24,7 @@ Future<List<dynamic>> obtenerDomicilios(String estado, int id) async {
 
   if (response.statusCode == 200) {
     final jsonData = json.decode(response.body);
+    print(response.body);
     return jsonData; // Retorna los domicilios
   } else {
     print(response.statusCode);
