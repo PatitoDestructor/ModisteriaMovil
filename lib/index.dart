@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:modisteria2/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'perfil.dart';
-import 'main.dart';
-import 'selectedItemPainter.dart';
-import 'providers/user_provider.dart';
 import 'package:provider/provider.dart';
-import 'domicilio.dart';
-import 'PQRS.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:awesome_dialog/awesome_dialog.dart';
+import 'package:intl/intl.dart';
+import 'AgregarCitaForm.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:form_builder_validators/form_builder_validators.dart';
 
 void main() {
   runApp(MyApp());
@@ -19,15 +19,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Mis Domicilios',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
       home: MyHomePage(),
-      routes: {
-        '/perfil': (context) => Perfil(), // Ruta hacia Perfil
-        '/main': (context) => const RegisterPage(), // Ruta hacia Login
-      },
     );
   }
 }
@@ -38,310 +33,731 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final _selectedEstado = 'Seleccione una opción';
-  int _selectedIndex = 0;
-  List<dynamic> _domicilios = [];
   bool _isLoading = true;
+  List<dynamic> _citas = [];
+  List<dynamic> _filteredCitas = [];
+  int? _selectedEstadoId;
+    List<Map<String, dynamic>> _insumos = [];
+  String? _selectedInsumo;
+  int? _cantidadInsumo;
+
+  final Map<int, String> estados = {
+    0: 'Todas',
+    9: 'Por aprobar',
+    10: 'Aprobada',
+    11: 'Aceptada',
+    12: 'Cancelada',
+    13: 'Terminada',
+  };
 
   @override
   void initState() {
     super.initState();
-    _fetchDomicilios();
+    _fetchCitas();
+    _fetchInsumos();
   }
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+  Future<void> _fetchCitas() async {
+    final url = Uri.parse("https://modisteria-back-production.up.railway.app/api/citas/getAllCitas");
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('x-token');
 
-    if (index == 0) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => MyHomePage()),
+    try {
+      final response = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'x-token': token ?? '',
+        },
       );
+      if (response.statusCode == 200) {
+        setState(() {
+          _citas = json.decode(response.body);
+          _filteredCitas = _citas; // Al inicio, mostrar todas las citas
+          _isLoading = false;
+        });
+      } else {
+        print("Error al obtener citas: ${response.statusCode} - ${response.body}");
+      }
+    } catch (e) {
+      print("Excepción al obtener citas: $e");
     }
-    if (index == 1) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => Perfil()),
-      );
+  }
+
+  Future<void> _fetchInsumos() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('x-token');
+
+    final response = await http.get(
+      Uri.parse('https://modisteria-back-production.up.railway.app/api/insumos/getAllInsumos'),
+      headers: {
+        'Content-Type': 'application/json',
+        'x-token': token ?? '',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      setState(() {
+        _insumos = List<Map<String, dynamic>>.from(data);
+      });
+    } else {
+      print('Error al obtener los insumos');
     }
+  }
+
+  void _filterByEstado(int? estadoId) {
+    setState(() {
+      _selectedEstadoId = estadoId;
+      _filteredCitas = estadoId == null || estadoId == 0
+          ? _citas // Mostrar todas las citas si "Todas" está seleccionado
+          : _citas.where((cita) => cita['estadoId'] == estadoId).toList();
+    });
+  }
+
+  String _formatFecha(String fecha) {
+    final dateTime = DateTime.parse(fecha);
+    return DateFormat('MM/dd/yyyy').format(dateTime);
+  }
+
+  String _formatHora(String fecha) {
+    final dateTime = DateTime.parse(fecha);
+    return DateFormat('hh:mm a').format(dateTime);
+  }
+
+  String _formatPrecio(int amount) {
+    final formatCurrency = NumberFormat.currency(
+      locale: 'es_CO',
+      symbol: 'COP',
+      decimalDigits: 0,
+    );
+    return formatCurrency.format(amount);
   }
 
   void _logout() async {
-  final prefs = await SharedPreferences.getInstance();
-  await prefs.clear();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
 
     AwesomeDialog(
-        context: context,
-        dialogType: DialogType.success,
-        animType: AnimType.scale,
-        showCloseIcon: false,
-        title: "Hasta Pronto",
-        dialogBackgroundColor	: const Color.fromRGBO(255, 255, 255, 1),
-        barrierColor: const Color.fromARGB(147, 26, 26, 26),
-        desc: "Cerraste sesión correctamente.",
-        headerAnimationLoop: true,
-        btnOkOnPress: () {
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (context) => const RegisterPage()),
-            (Route<dynamic> route) => false,
-          );
-        },
-        descTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 18),
-        buttonsBorderRadius : const BorderRadius.all(Radius.circular(500)),
-        titleTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 24)
+      context: context,
+      dialogType: DialogType.success,
+      animType: AnimType.scale,
+      showCloseIcon: false,
+      title: "Hasta Pronto",
+      desc: "Cerraste sesión correctamente.",
+      headerAnimationLoop: true,
+      btnOkOnPress: () {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => RegisterPage()),
+          (Route<dynamic> route) => false,
+        );
+      },
     ).show();
-}
-
-void _fetchDomicilios() async {
-  final userProvider = Provider.of<UserProvider>(context, listen: false);
-  final user = userProvider.user;
-
-  setState(() {
-    _isLoading = true; // Iniciar la carga
-  });
-
-  try {
-    List<dynamic> domicilios = await obtenerDomicilios(_selectedEstado, user!.id, user!.roleId);
-    setState(() {
-      _domicilios = domicilios;
-      _isLoading = false; // Finalizar la carga
-    });
-  } catch (error) {
-    setState(() {
-      _isLoading = false; // Asegúrate de finalizar la carga en caso de error
-    });
-    print('Error al obtener domicilios: $error');
-    // Puedes mostrar un mensaje de error en la UI si lo deseas
-  }
-}
-
-Color _getColorByEstadoId(int estadoId) {
-switch (estadoId) {
-  case 3:
-    return Colors.grey; // Pendiente
-  case 6:
-    return Colors.green; // Entregado
-  case 8:
-    return Colors.red; // Cancelado
-  default:
-    return Colors.black;
-}
-}
-
-Color _getColorByNovedad(String novedad){
-  if(novedad == ''){
-    return Colors.red;
-  }else{
-    return Colors.green;
-  }
-}
-
-void _showEditModal(BuildContext context, Map domicilio) {
-  final _formKey = GlobalKey<FormState>();
-  String? _selectedEstado;
-  final _novedadesController = TextEditingController();
-  bool _isNovedadesValid = false;
-
-  void _validateNovedades(String value) {
-    _isNovedadesValid = value.length >= 10;
   }
 
+void _mostrarModalUsuario(BuildContext context, Map<String, dynamic> usuario) {
   showDialog(
     context: context,
     builder: (BuildContext context) {
       return Dialog(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(20),
         ),
-        elevation: 16,
+        elevation: 10,
+        backgroundColor: Colors.white,
         child: Container(
           padding: const EdgeInsets.all(20),
-          height: 470, // Ajusta la altura según sea necesario
-          width: 500,
+          constraints: const BoxConstraints(maxWidth: 350),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircleAvatar(
+                radius: 40,
+                backgroundImage: NetworkImage('assets/img/user.png'),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                usuario['nombre'] ?? 'Nombre del Cliente',
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.purple,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 10),
+              Text(
+                "Correo: ${usuario['email'] ?? 'No disponible'}",
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Colors.black87,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 10),
+              Text(
+                "Teléfono: ${usuario['telefono'] ?? 'No disponible'}",
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Colors.black87,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 10),
+              Text(
+                "Dirección: ${usuario['direccion'] ?? 'No disponible'}",
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Colors.black87,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.purple,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  child: Text(
+                    'Cerrar',
+                    style: TextStyle(fontSize: 18, color: Colors.white),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
+
+Future<void> _enviarCorreo(String? email, String fecha, String hora, String username) async {
+    if (email == null || email.isEmpty) {
+      print("Correo del usuario no encontrado");
+      return;
+    }
+    const apiUrl = 'https://modisteria-back-production.up.railway.app/api/usuarios/sendEmail';
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('x-token');
+    String cuerpo = '''
+    Querido usuario ${username},
+    Su cita para el ${fecha} a las ${hora},
+    fue cancelada.".
+    ''';
+    
+    try {
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'x-token': token ?? '',
+        },
+        body: jsonEncode(<String, String>{
+          'asunto': 'Cita cancelada.',
+          'cuerpo': cuerpo,
+          'email': email
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        print('Correo enviado exitosamente');
+      } else {
+        print('Error al enviar correo: ${response.body}');
+      }
+
+      } catch (e) {
+      print('Error al conectarse al servidor: $e');
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Error'),
+            content: const Text('Error al conectar con el servidor.'),
+            actions: <Widget>[
+              TextButton(
+                child: const Text('OK'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
+      );
+    }
+}
+
+Future<void> _deleteCita(BuildContext context, Map<String, dynamic> cita) async {
+  final int citaId = cita['id'];
+  final String email = cita['usuario']['email'];
+  final String nombreUsuario = cita['usuario']['nombre'];
+  final String fechaCita = _formatFecha(cita['fecha']);
+  final String horaCita = _formatHora(cita['fecha']);
+  final url = Uri.parse('https://modisteria-back-production.up.railway.app/api/citas/cancelarCita/$citaId');
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  String? token = prefs.getString('x-token');
+
+
+  try {
+    final response = await http.put(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'x-token': token ?? '',
+      },
+    );
+
+    if (response.statusCode == 201) {
+
+      await _enviarCorreo(
+        email,
+        fechaCita,
+        horaCita,
+        nombreUsuario,
+      );
+
+      AwesomeDialog(
+      context: context,
+      dialogType: DialogType.success,
+      animType: AnimType.scale,
+      showCloseIcon: false,
+      title: "Perfecto",
+      dialogBackgroundColor	: const Color.fromRGBO(255, 255, 255, 1),
+      barrierColor: const Color.fromARGB(147, 26, 26, 26),
+      desc: "Cita cancelada exitosamente.",
+      headerAnimationLoop: true,
+      btnOkOnPress: () {
+        _fetchCitas();
+      },
+      descTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 18),
+      buttonsBorderRadius : const BorderRadius.all(Radius.circular(500)),
+      titleTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 24)
+      ).show();
+
+    }else if(response.statusCode == 400){
+      AwesomeDialog(
+      context: context,
+      dialogType: DialogType.info,
+      animType: AnimType.scale,
+      showCloseIcon: false,
+      title: "Ups...",
+      dialogBackgroundColor	: const Color.fromRGBO(255, 255, 255, 1),
+      barrierColor: const Color.fromARGB(147, 26, 26, 26),
+      desc: "La cita aún no ha sido aprobada.",
+      headerAnimationLoop: true,
+      btnOkOnPress: () {
+      },
+      descTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 18),
+      buttonsBorderRadius : const BorderRadius.all(Radius.circular(500)),
+      titleTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 24)
+      ).show();
+    } 
+    
+    else {
+      AwesomeDialog(
+      context: context,
+      dialogType: DialogType.error,
+      animType: AnimType.scale,
+      showCloseIcon: false,
+      title: "Ups...",
+      dialogBackgroundColor	: const Color.fromRGBO(255, 255, 255, 1),
+      barrierColor: const Color.fromARGB(147, 26, 26, 26),
+      desc: "Error al cancelar la Cita.",
+      headerAnimationLoop: true,
+      btnOkOnPress: () {
+      },
+      descTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 18),
+      buttonsBorderRadius : const BorderRadius.all(Radius.circular(500)),
+      titleTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 24)
+      ).show();
+    }
+  } catch (e) {
+    print("Error al eliminar la cita: $e");
+    AwesomeDialog(
+      context: context,
+      dialogType: DialogType.error,
+      animType: AnimType.scale,
+      title: "Error",
+      desc: "Ocurrió un error. Inténtalo más tarde.",
+      btnOkOnPress: () {},
+    ).show();
+  }
+}
+
+String _convertirHora(String tiempo) {
+  final formatoEntrada = DateFormat("h:mm");
+  final formatoSalida = DateFormat("HH:mm:ss");
+  try {
+    final hora = formatoEntrada.parse(tiempo);
+    return formatoSalida.format(hora);
+  } catch (e) {
+    print('Error al convertir la hora: $e');
+    return "00:00:00";
+  }
+}
+
+Future<void> _aprobarCita(int id, int estadoId, String tiempo, String precio, int insumo, int cantidad) async {
+  final url = Uri.parse('https://modisteria-back-production.up.railway.app/api/citas/updateSPT/$id');
+  final urlInsumos = Uri.parse('https://modisteria-back-production.up.railway.app/api/citas/updateCitaInsumos/$id');
+  String tiempoFormateado = _convertirHora(tiempo);
+  int precioEntero = int.parse(precio);
+
+  List<Map<String, dynamic>> datosInsumos = [
+    {
+      'insumo_id': insumo,
+      'cantidad_utilizada': cantidad,
+    }
+  ];
+
+  try {
+    final response = await http.put(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode(<String, dynamic>{
+        'estadoId': 10,
+        'tiempo': tiempoFormateado,
+        'precio': precioEntero,
+      }),
+    );
+
+    if (response.statusCode == 201) {
+
+      final responseInsumos = await http.put(
+        urlInsumos,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(<String, dynamic>{
+          'datosInsumos':datosInsumos
+        }),
+      );
+
+      if (responseInsumos.statusCode == 200) {
+        print("insumos descontados");
+      }else{
+        print("error al descontar insumos");
+      }
+
+      AwesomeDialog(
+      context: context,
+      dialogType: DialogType.success,
+      animType: AnimType.scale,
+      showCloseIcon: false,
+      title: "Perfecto",
+      dialogBackgroundColor	: const Color.fromRGBO(255, 255, 255, 1),
+      barrierColor: const Color.fromARGB(147, 26, 26, 26),
+      desc: "Cita Aprobada.",
+      headerAnimationLoop: true,
+      btnOkOnPress: () {
+        _fetchCitas();
+      },
+      descTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 18),
+      buttonsBorderRadius : const BorderRadius.all(Radius.circular(500)),
+      titleTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 24)
+      ).show();
+    } else {
+        final responseData = jsonDecode(response.body);
+        final msg = responseData['msg'];
+
+        AwesomeDialog(
+        context: context,
+        dialogType: DialogType.error,
+        animType: AnimType.scale,
+        showCloseIcon: false,
+        title: "Ups...",
+        dialogBackgroundColor	: const Color.fromRGBO(255, 255, 255, 1),
+        barrierColor: const Color.fromARGB(147, 26, 26, 26),
+        desc: "${msg}",
+        headerAnimationLoop: true,
+        btnOkOnPress: () {
+        },
+        descTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 18),
+        buttonsBorderRadius : const BorderRadius.all(Radius.circular(500)),
+        titleTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 24)
+        ).show();
+    }
+  } catch (e) {
+    print('Error en la solicitud: $e');
+  }
+}
+
+Future<void> _editarCita(int id, int estadoId, String tiempo, String precio) async {
+  final url = Uri.parse('https://modisteria-back-production.up.railway.app/api/citas/updateCita/$id');
+  String tiempoFormateado = _convertirHora(tiempo);
+  int precioEntero = int.parse(precio);
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  String? token = prefs.getString('x-token');
+
+  try {
+    final response = await http.put(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'x-token': token ?? '',
+      },
+      body: json.encode({
+        'estadoId': estadoId,
+        'tiempo': tiempoFormateado,
+        'precio': precioEntero,
+      }),
+    );
+
+    if (response.statusCode == 201) {
+      AwesomeDialog(
+      context: context,
+      dialogType: DialogType.success,
+      animType: AnimType.scale,
+      showCloseIcon: false,
+      title: "Perfecto",
+      dialogBackgroundColor	: const Color.fromRGBO(255, 255, 255, 1),
+      barrierColor: const Color.fromARGB(147, 26, 26, 26),
+      desc: "Cita editada exitosamente.",
+      headerAnimationLoop: true,
+      btnOkOnPress: () {
+        _fetchCitas();
+      },
+      descTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 18),
+      buttonsBorderRadius : const BorderRadius.all(Radius.circular(500)),
+      titleTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 24)
+      ).show();
+    } else {
+        AwesomeDialog(
+        context: context,
+        dialogType: DialogType.error,
+        animType: AnimType.scale,
+        showCloseIcon: false,
+        title: "Ups...",
+        dialogBackgroundColor	: const Color.fromRGBO(255, 255, 255, 1),
+        barrierColor: const Color.fromARGB(147, 26, 26, 26),
+        desc: "Error al editar la Cita.",
+        headerAnimationLoop: true,
+        btnOkOnPress: () {
+        },
+        descTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 18),
+        buttonsBorderRadius : const BorderRadius.all(Radius.circular(500)),
+        titleTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 24)
+        ).show();
+        
+        print(response.statusCode);
+        print(response.body);
+    }
+  } catch (e) {
+    print('Error en la solicitud: $e');
+  }
+}
+
+void _mostrarModalAprobarCita(BuildContext context, Map<String, dynamic> cita) {
+  final _tiempoController = TextEditingController();
+  final _precioController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+
+  
+  String? _selectedInsumo;
+  String? _cantidadInsumo;
+
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (BuildContext context) {
+      return Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(15),
+          ),
           child: Form(
             key: _formKey,
             child: Column(
-              children: <Widget>[
-                Align(
-                  alignment: Alignment.topRight,
-                  child: IconButton(
-                    icon: const Icon(Icons.close, color: Colors.black),
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                  ),
-                ),
-                Text(
-                  'Editar Domicilio #${domicilio['id']}',
-                  style: const TextStyle(
-                    fontSize: 24,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Aprobar Cita',
+                  style: TextStyle(
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: Colors.black,
                   ),
                 ),
-                const SizedBox(height: 10),
-                const Divider(),
-                const SizedBox(height: 10),
-                DropdownButtonFormField<String>(
-                  value: _selectedEstado,
+                const SizedBox(height: 20),
+
+                // Campo Tiempo
+                TextFormField(
+                  controller: _tiempoController,
                   decoration: InputDecoration(
-                    labelText: 'Estado',
-                    fillColor: Colors.grey.shade200,
-                    focusedBorder: const OutlineInputBorder(
-                      borderSide: BorderSide(
-                          width: 3, style: BorderStyle.solid, color: Colors.purple),
-                    ),
-                    enabledBorder: const OutlineInputBorder(
-                      borderSide: BorderSide(width: 0, style: BorderStyle.none),
-                    ),
+                    labelText: 'Tiempo',
+                    prefixIcon: const Icon(Icons.timer, color: Colors.blue),
                     filled: true,
+                    fillColor: Colors.grey[200],
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
-                  items: const [
-                    DropdownMenuItem(value: '6', child: Text('Entregado')),
-                    DropdownMenuItem(value: '3', child: Text('Pendiente')),
-                    DropdownMenuItem(value: '8', child: Text('Cancelado')),
-                  ],
-                  onChanged: (newValue) {
-                    _selectedEstado = newValue;
+                  readOnly: true,
+                  onTap: () async {
+                    TimeOfDay? pickedTime = await showTimePicker(
+                      context: context,
+                      initialTime: TimeOfDay.now(),
+                      builder: (BuildContext context, Widget? child) {
+                        return MediaQuery(
+                          data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: false),
+                          child: child!,
+                        );
+                      },
+                    );
+
+                    if (pickedTime != null) {
+                      final now = DateTime.now();
+                      final selectedTime = DateTime(
+                          now.year, now.month, now.day, pickedTime.hour, pickedTime.minute);
+                      final formattedTime = DateFormat('h:mm').format(selectedTime);
+                      _tiempoController.text = formattedTime;
+                    }
                   },
                   validator: (value) {
-                    if (value == null) {
-                      return 'Selecciona un estado';
+                    if (value == null || value.isEmpty) {
+                      return 'Por favor, selecciona una hora.';
                     }
                     return null;
                   },
                 ),
-                const SizedBox(height: 15),
+                const SizedBox(height: 20),
+
+                // Campo Precio
                 TextFormField(
-                  controller: _novedadesController,
-                  maxLines: 5, // Esto convierte el campo en un área de texto
+                  controller: _precioController,
                   decoration: InputDecoration(
-                    labelText: 'Novedades',
-                    hintText: 'Escribe al menos 10 caracteres',
-                    fillColor: Colors.grey.shade200,
-                    focusedBorder: const OutlineInputBorder(
-                      borderSide: BorderSide(
-                          width: 3, style: BorderStyle.solid, color: Colors.purple),
-                    ),
-                    enabledBorder: const OutlineInputBorder(
-                      borderSide: BorderSide(width: 0, style: BorderStyle.none),
-                    ),
+                    labelText: 'Precio',
+                    prefixIcon: const Icon(Icons.attach_money, color: Colors.green),
                     filled: true,
-                  ),
-                  onChanged: _validateNovedades,
-                ),
-                const SizedBox(height: 30),
-                ElevatedButton(
-                  onPressed: () async {
-
-                    if (_formKey.currentState!.validate()) {
-                      String novedad = _novedadesController.text;
-                      String estadoString = _selectedEstado!;
-                      int estadoId = int.parse(estadoString);
-                      int domicilioId = domicilio['id'];
-                      String apiUrl = 'https://modisteria-back-production.up.railway.app/api/domicilios/updateDomicilio/$domicilioId';
-
-                      SharedPreferences prefs = await SharedPreferences.getInstance();
-                      String? token = prefs.getString('x-token');
-
-                      try{
-                          var response = await http.put(
-                          Uri.parse(apiUrl),
-                          headers: <String, String>{
-                            'Content-Type': 'application/json; charset=UTF-8',
-                            'x-token': token ?? '',
-                          },
-                          body: jsonEncode(<String, dynamic>{
-                            'novedades': novedad,
-                            'estadoId': estadoId,
-                          }),
-                        );
-
-                        if(response.statusCode == 201){
-
-                          AwesomeDialog(
-                            context: context,
-                            dialogType: DialogType.success,
-                            animType: AnimType.scale,
-                            showCloseIcon: false,
-                            title: "Correcto",
-                            dialogBackgroundColor	: const Color.fromRGBO(255, 255, 255, 1),
-                            barrierColor: const Color.fromARGB(147, 26, 26, 26),
-                            desc: "El Domicilio se editó correctamente.",
-                            headerAnimationLoop: true,
-                            btnOkOnPress: () {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(builder: (context) => MyHomePage()),
-                              );
-                            },
-                            descTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 18),
-                            buttonsBorderRadius : const BorderRadius.all(Radius.circular(500)),
-                            titleTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 24)
-                          ).show();
-
-                        }else{
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: const Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: <Widget>[
-                                  Icon(
-                                    Icons.indeterminate_check_box,
-                                    color: Colors.white,
-                                  ),
-                                  SizedBox(width: 5),
-                                  Text(
-                                    "Error al editar el Domicilio",
-                                    style: TextStyle(color: Colors.white),
-                                  )
-                                ],
-                              ),
-                              duration: const Duration(milliseconds: 2000),
-                              width: 300,
-                              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10),
-                              behavior: SnackBarBehavior.floating,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(3.0),
-                              ),
-                              backgroundColor: const Color.fromARGB(255, 241, 10, 10),
-                            ),
-                          );
-                        }
-
-                      }catch(e){
-                        print('Error al conectarse al servidor: $e');
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return AlertDialog(
-                              title: const Text('Error'),
-                              content: const Text('Error al conectar con el servidor.'),
-                              actions: <Widget>[
-                                TextButton(
-                                  child: const Text('OK'),
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                  },
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                      }
-                    }
-
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.purple,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                    fillColor: Colors.grey[200],
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
                     ),
                   ),
-                  child: const Text('Editar'),
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                  ],
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Por favor, introduce un precio.';
+                    }
+                    if (double.tryParse(value) == null) {
+                      return 'Por favor, introduce un número válido.';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 20),
+
+                // Dropdown de Insumo y Cantidad
+                FormBuilderDropdown<String>(
+                  name: 'insumo',
+                  decoration: InputDecoration(
+                    labelText: 'Insumo',
+                    filled: true,
+                    fillColor: Colors.grey[200],
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  items: _insumos.map((insumo) {
+                    return DropdownMenuItem(
+                      value: insumo['id'].toString(),
+                      child: Text(insumo['nombre']),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    _selectedInsumo = value;
+                  },
+                  validator: (value) {
+                    if (value == null) {
+                      return 'Por favor, selecciona un insumo.';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  decoration: InputDecoration(
+                    labelText: 'Cantidad',
+                    filled: true,
+                    fillColor: Colors.grey[200],
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  keyboardType: TextInputType.number,
+                  onChanged: (value) {
+                    _cantidadInsumo = value;
+                  },
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Por favor, introduce la cantidad.';
+                    }
+                    if (int.tryParse(value) == null || int.parse(value) < 1) {
+                      return 'Debe ser al menos 1.';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 20),
+
+                // Botones de Cancelar y Enviar
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text('Cancelar'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          final tiempo = _tiempoController.text;
+                          final precio = _precioController.text;
+                          final citaId = cita['id'];
+                          final estado = cita['estadoId'];
+                          final insumo = int.parse(_selectedInsumo!);
+                          final cantidad = int.parse(_cantidadInsumo!);
+
+                          _aprobarCita(citaId, estado, tiempo, precio, insumo, cantidad);
+                          Navigator.of(context).pop();
+                        }
+                      },
+                      child: const Text('Aprobar'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -352,343 +768,477 @@ void _showEditModal(BuildContext context, Map domicilio) {
   );
 }
 
+void _mostrarModalEditarCita(BuildContext context, Map<String, dynamic> cita) {
+  final _tiempoController = TextEditingController();
+  final _precioController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (BuildContext context) {
+      return Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Editar Cita',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Campo Tiempo
+                TextFormField(
+                  controller: _tiempoController,
+                  decoration: InputDecoration(
+                    labelText: 'Tiempo',
+                    prefixIcon: const Icon(Icons.timer, color: Colors.blue),
+                    filled: true,
+                    fillColor: Colors.grey[200],
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  readOnly: true,
+                  onTap: () async {
+                    TimeOfDay? pickedTime = await showTimePicker(
+                      context: context,
+                      initialTime: TimeOfDay.now(),
+                      builder: (BuildContext context, Widget? child) {
+                        return MediaQuery(
+                          data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: false),
+                          child: child!,
+                        );
+                      },
+                    );
+
+                    if (pickedTime != null) {
+                      // Convertir TimeOfDay a DateTime y formatear a 12 horas sin AM/PM
+                      final now = DateTime.now();
+                      final selectedTime = DateTime(now.year, now.month, now.day, pickedTime.hour, pickedTime.minute);
+                      final formattedTime = DateFormat('h:mm').format(selectedTime); // 12 horas sin AM/PM
+                      _tiempoController.text = formattedTime;
+                    }
+                  },
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Por favor, selecciona una hora.';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 20),
+
+                // Campo Precio
+                TextFormField(
+                  controller: _precioController,
+                  decoration: InputDecoration(
+                    labelText: 'Precio',
+                    prefixIcon: const Icon(Icons.attach_money, color: Colors.green),
+                    filled: true,
+                    fillColor: Colors.grey[200],
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly, // Permitir solo números
+                  ],
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Por favor, introduce un precio.';
+                    }
+                    if (double.tryParse(value) == null) {
+                      return 'Por favor, introduce un número válido.';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 20),
+
+                // Botones de Cancelar y Enviar
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text('Cancelar'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor:Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          final tiempo = _tiempoController.text;
+                          final precio = _precioController.text;
+                          final citaId = cita['id'];
+                          final estado = cita['estadoId'];
+                          _editarCita(citaId, estado, tiempo, precio);
+                          Navigator.of(context).pop();
+                        }
+                      },
+                      child: const Text('Editar'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor:Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
 
   @override
   Widget build(BuildContext context) {
-    final userProvider = Provider.of<UserProvider>(context);
-    final user = userProvider.user;
-
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 248, 248, 248),
       appBar: AppBar(
         backgroundColor: Colors.white,
         title: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              user!.roleId == 4 ? 'Mis Domicilios': 'Mis Pedidos',
-              style: const TextStyle(fontSize: 35, fontWeight: FontWeight.bold, color: Colors.black),
+            const Text(
+              "Citas",
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
             ),
-            const SizedBox(width: 20),
-            SizedBox(
-              width: 40,
-              height: 40,
-              child: Image.asset('assets/img/domicilio.png', fit: BoxFit.cover),
+            const SizedBox(width: 10),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: const BoxDecoration(
+                color: Colors.red,
+                shape: BoxShape.circle,
+              ),
+              child: Text(
+                _citas.length.toString(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
             ),
           ],
         ),
-        elevation: 0,
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.logout, color: Colors.black),
           onPressed: _logout,
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : Expanded(
-                  child: ListView.builder(
-                    itemCount: _domicilios.length,
-                    itemBuilder: (context, index) {
-                      final domicilio = _domicilios[index];
-                      final ventas = domicilio['ventas'];
-                      final cotizacion = ventas['cotizacion'];
-                      final cotizacionPedidos = cotizacion['cotizacion_pedidos'];
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Container(
+              decoration: const BoxDecoration(
 
-                      return Card(
-                        child: ListTile(
-                          title: Text(
-                            'Domicilio #${domicilio['id']}',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                children: [
+                  DropdownButton<int>(
+                    value: _selectedEstadoId,
+                    hint: const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 8.0),
+                            child: Text(
+                              "Selecciona un estado",
+                              style: TextStyle(color: Colors.grey),
+                            ),
                           ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                domicilio['novedades'] == ""
-                                    ? 'Novedades: No hay novedades'
-                                    : 'Novedades: ${domicilio['novedades']}',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: _getColorByNovedad(domicilio['novedades']),
-                                ),
-                              ),
-                              Text(
-                                domicilio['estadoId'] == 3
-                                    ? 'Estado: Pendiente'
-                                    : domicilio['estadoId'] == 6
-                                        ? 'Estado: Entregado'
-                                        : domicilio['estadoId'] == 8
-                                            ? 'Estado: Cancelado'
-                                            : 'Estado: Por entregar',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: _getColorByEstadoId(domicilio['estadoId']),
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  if (user.roleId == 4)
-                                  ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.black,
-                                      foregroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(15),
-                                      ),
-                                      padding:
-                                          const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                    ),
-                                    onPressed: () {
-                                      // Mostrar modal con información del pedido
-                                    showDialog(
-                                      context: context,
-                                      builder: (BuildContext context) {
-                                        return Dialog(
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(15),
-                                          ),
-                                          elevation: 16,
-                                          child: Container(
-                                            padding: const EdgeInsets.all(20),
-                                            height: 550,
-                                            width: 500,
-                                            child: Column(
-                                              children: <Widget>[
-                                                Align(
-                                                  alignment: Alignment.topRight,
-                                                  child: IconButton(
-                                                    icon: const Icon(Icons.close, color: Colors.black),
-                                                    onPressed: () {
-                                                      Navigator.of(context).pop();
-                                                    },
-                                                  ),
-                                                ),
-                                                Text(
-                                                  'Detalles del Pedido #${domicilio['id']}',
-                                                  style: const TextStyle(
-                                                    fontSize: 24,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Colors.black,
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 10),
-                                                const Divider(),
-                                                const SizedBox(height: 10),
-                                                Expanded(
-                                                  child: ListView.builder(
-                                                    itemCount: cotizacionPedidos.length,
-                                                    itemBuilder: (context, pedidoIndex) {
-                                                      final pedido = cotizacionPedidos[pedidoIndex]['pedido'];
-                                                      return Card(
-                                                        margin: const EdgeInsets.symmetric(vertical: 8),
-                                                        elevation: 4,
-                                                        shape: RoundedRectangleBorder(
-                                                          borderRadius: BorderRadius.circular(10),
-                                                        ),
-                                                        child: ListTile(
-                                                          title: RichText(
-                                                                text: TextSpan(
-                                                                  children: [
-                                                                    const TextSpan(
-                                                                      text: 'Pedido ID: ',
-                                                                      style: TextStyle(
-                                                                        fontSize: 18,
-                                                                        color: Colors.black,
-                                                                        fontWeight: FontWeight.bold,
-                                                                      ),
-                                                                    ),
-                                                                    TextSpan(
-                                                                      text: '${pedido['idPedido']}',
-                                                                      style: const TextStyle(
-                                                                        fontSize: 18,
-                                                                        color: Color.fromARGB(255, 71, 71, 71),
-                                                                      ),
-                                                                    ),
-                                                                  ],
-                                                                ),
-                                                              ),
-                                                          subtitle: Column(
-                                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                                            children: [
-                                                              const SizedBox(height: 5),
-                                                              RichText(
-                                                                text: TextSpan(
-                                                                  children: [
-                                                                    const TextSpan(
-                                                                      text: 'Talla: ',
-                                                                      style: TextStyle(
-                                                                        fontSize: 16,
-                                                                        color: Colors.purple, 
-                                                                        fontWeight: FontWeight.bold,
-                                                                      ),
-                                                                    ),
-                                                                    TextSpan(
-                                                                      text: '${pedido['talla']}',
-                                                                      style: const TextStyle(
-                                                                        fontSize: 16,
-                                                                        color: Colors.black,
-                                                                      ),
-                                                                    ),
-                                                                  ],
-                                                                ),
-                                                              ),
-                                                              RichText(
-                                                                text: TextSpan(
-                                                                  children: [
-                                                                    const TextSpan(
-                                                                      text: 'Cantidad: ',
-                                                                      style: TextStyle(
-                                                                        fontSize: 16,
-                                                                        color: Colors.purple, // Color para "Cantidad:"
-                                                                        fontWeight: FontWeight.bold,
-                                                                      ),
-                                                                    ),
-                                                                    TextSpan(
-                                                                      text: '${pedido['cantidad']}',
-                                                                      style: const TextStyle(
-                                                                        fontSize: 16,
-                                                                        color: Colors.black, // Color para el valor de "Cantidad"
-                                                                      ),
-                                                                    ),
-                                                                  ],
-                                                                ),
-                                                              ),
-                                                              RichText(
-                                                                text: TextSpan(
-                                                                  children: [
-                                                                    const TextSpan(
-                                                                      text: 'Para: ',
-                                                                      style: TextStyle(
-                                                                        fontSize: 16,
-                                                                        color: Colors.purple, // Color para "Usuario:"
-                                                                        fontWeight: FontWeight.bold,
-                                                                      ),
-                                                                    ),
-                                                                    TextSpan(
-                                                                      text: '${pedido['usuario']['nombre']}',
-                                                                      style: const TextStyle(
-                                                                        fontSize: 16,
-                                                                        color: Colors.black, // Color para el valor de "Usuario"
-                                                                      ),
-                                                                    ),
-                                                                  ],
-                                                                ),
-                                                              ),
-                                                              const SizedBox(height: 5),
-                                                              RichText(
-                                                                text: TextSpan(
-                                                                  children: [
-                                                                    const TextSpan(
-                                                                      text: 'Dirección: ',
-                                                                      style: TextStyle(
-                                                                        fontSize: 16,
-                                                                        color: Colors.purple, // Color para "Usuario:"
-                                                                        fontWeight: FontWeight.bold,
-                                                                      ),
-                                                                    ),
-                                                                    TextSpan(
-                                                                      text: pedido['usuario']['direccion'] != null ? '${pedido['usuario']['direccion']}': 'No Especificada',
-                                                                      style: const TextStyle(
-                                                                        fontSize: 16,
-                                                                        color: Colors.black, // Color para el valor de "Usuario"
-                                                                      ),
-                                                                    ),
-                                                                  ],
-                                                                ),
-                                                              ),
-                                                              const SizedBox(height: 5),
-                                                            ],
-                                                          ),
-                                                            
-                                                        ),
-                                                        
-                                                      );
-                                                    },
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                    );
-
-                                    },
-                                    child: const Text('Pedido Info'),
-                                  ),
-                                  const Spacer(),
-
-                                  if (user.roleId == 4)
-                                    ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.purple,
-                                        foregroundColor: Colors.white,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(15),
-                                        ),
-                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                      ),
-                                      onPressed: () {
-                                        _showEditModal(context, domicilio);
-                                      },
-                                      child: const Icon(Icons.edit, size: 18),
-                                    )
-                                  else
-                                    ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.purple,
-                                        foregroundColor: Colors.white,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(15),
-                                        ),
-                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                      ),
-                                      onPressed: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => PQRSForm(domicilioId: domicilio['id']),
-                                          ),
-                                        );
-                                      },
-                                      child: const Icon(Icons.add_call, size: 18),
-                                    ),
-                                ],
-                              ),
-                            ],
+                    items: estados.entries.map((entry) {
+                      return DropdownMenuItem<int>(
+                        value: entry.key,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                          child: Text(
+                            entry.value,
+                            style: const TextStyle(fontSize: 16),
                           ),
-                          leading: Image.network(cotizacion['imagen'] == null ? 'https://png.pngtree.com/png-vector/20220119/ourmid/pngtree-crossed-image-icon-picture-not-available-sign-photo-sign-icon-vector-png-image_44027862.jpg' : cotizacion['imagen'] ),
                         ),
                       );
+                    }).toList(),
+                    onChanged: (estadoId) {
+                      _filterByEstado(estadoId);
                     },
+                      style: const TextStyle(
+                      color: Colors.black,
+                      fontSize: 16,
+                    ),
+                    iconEnabledColor: Colors.purple,
+                    iconDisabledColor: Colors.grey,
+                    underline: Container(),
+                    isExpanded: true,
                   ),
+                  const SizedBox(height: 20),
+                  Expanded(
+                    child: _filteredCitas.isEmpty
+                        ? Center(
+                            child: Text(
+                              "No hay citas disponibles.",
+                              style: TextStyle(
+                                fontSize: 20,
+                                color: Colors.grey[600],
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          )
+                        : ListView.builder(
+                            itemCount: _filteredCitas.length,
+                            itemBuilder: (context, index) {
+                              final cita = _filteredCitas[index];
+                              final usuario = cita['usuario'];
+                              return Card(
+                                margin: const EdgeInsets.symmetric(vertical: 10),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(15),
+                                ),
+                                elevation: 4,
+                                child: Container(
+                                  decoration:  BoxDecoration(
+                                    image: const DecorationImage(
+                                      image: AssetImage('assets/img/marco.jpeg'),
+                                      fit: BoxFit.cover,
+                                    ),
+                                    borderRadius: BorderRadius.circular(15), 
+                                  ),
+                                child: Stack(
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.all(16.0),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          InkWell(
+                                            onTap: () => _mostrarModalUsuario(context, usuario),
+                                            child: Text(
+                                              usuario['nombre'],
+                                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
+                                            ),
+                                          ),
+                                          Text(
+                                            "Fecha: ${_formatFecha(cita['fecha'])}",
+                                            style: const TextStyle(fontSize: 16, color: Colors.grey),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            "Objetivo: ${cita['objetivo']}",
+                                            style: const TextStyle(fontSize: 16),
+                                          ),
+                                          const SizedBox(height: 12),
+                                          Row(
+                                            children: [
+                                              const Icon(Icons.access_time, color: Colors.purple),
+                                              const SizedBox(width: 5),
+                                              Text(
+                                                _formatHora(cita['fecha']),
+                                                style: const TextStyle(fontSize: 16, color: Colors.purple, fontWeight: FontWeight.bold),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 12),
+                                          // Sub-card para precio y tiempo
+                                          Card(
+                                            color: Colors.grey[200],
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(12),
+                                            ),
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(10.0),
+                                              child: Row(
+                                                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                                children: [
+                                                  Row(
+                                                    children: [
+                                                      const Icon(Icons.attach_money, color: Colors.green),
+                                                      const SizedBox(width: 5),
+                                                      Text(
+                                                        cita['precio'] != null ? _formatPrecio(cita['precio']) : "Sin definir",
+                                                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  Row(
+                                                    children: [
+                                                      const Icon(Icons.timer, color: Colors.blue),
+                                                      const SizedBox(width: 5),
+                                                      Text(
+                                                        cita['tiempo'] != null ? "${cita['tiempo']}" : "N/A",
+                                                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 16),
+                                          // Botones Editar y Eliminar
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                            children: [
+                                            if(cita['estadoId'] == 9)
+                                              ElevatedButton.icon(
+                                                onPressed: () {
+                                                  _mostrarModalAprobarCita(context, cita);
+                                                },
+                                                label: const Icon(Icons.check, color: Colors.white),
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: Colors.green,
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius: BorderRadius.circular(20),
+                                                  ),
+                                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                                ),
+                                              ),
 
-                ),
-          ],
-        ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: ImageIcon(AssetImage('assets/img/domicilio.png'), color: Colors.black),
-            label: 'Domicilios',
+                                            if(cita['estadoId'] == 10)
+                                              ElevatedButton.icon(
+                                                onPressed: () {
+                                                  _mostrarModalEditarCita(context, cita);
+                                                },
+                                                label: const Icon(Icons.edit, color: Colors.white),
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: Colors.blue,
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius: BorderRadius.circular(20),
+                                                  ),
+                                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                                ),
+                                              ),
+
+                                              if(cita['estadoId'] == 10)
+                                              ElevatedButton.icon(
+                                                onPressed: () {
+                                                  AwesomeDialog(
+                                                    context: context,
+                                                    dialogType: DialogType.warning,
+                                                    animType: AnimType.scale,
+                                                    showCloseIcon: true,
+                                                    title: "Cuidado",
+                                                    dialogBackgroundColor	: const Color.fromRGBO(255, 255, 255, 1),
+                                                    barrierColor: const Color.fromARGB(147, 26, 26, 26),
+                                                    desc: "¿Estás seguro de cancelar la cita de ${usuario['nombre']}?",
+                                                    headerAnimationLoop: true,
+                                                    btnOkOnPress: () {
+                                                      _deleteCita(context, cita);
+                                                    },
+                                                    btnCancelText: "Cancelar",       // Texto del botón de Cancelar
+                                                    btnCancelOnPress: () {
+                                                    },
+                                                    descTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 18),
+                                                    buttonsBorderRadius : const BorderRadius.all(Radius.circular(500)),
+                                                    titleTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 24)
+                                                  ).show();
+                                                },
+                                                label: const Icon(Icons.delete, color: Colors.white),
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: Colors.red,
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius: BorderRadius.circular(20),
+                                                  ),
+                                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                                ),
+                                              ),
+
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Positioned(
+                                      top: 10,
+                                      right: 10,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                                        decoration: BoxDecoration(
+                                          color: _getEstadoColor(cita['estadoId']),
+                                          borderRadius: BorderRadius.circular(20),
+                                        ),
+                                        child: Text(
+                                          estados[cita['estadoId']] ?? "Sin Estado",
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
+            ),
           ),
-          BottomNavigationBarItem(
-            icon: ImageIcon(AssetImage('assets/img/imagePerfil.png'), color: Colors.black),
-            label: 'Perfil',
+          floatingActionButton: FloatingActionButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => AgregarCitaPage()),
+              );
+              _fetchCitas();
+            },
+            child: Icon(Icons.add),
+            backgroundColor: Colors.purple,
           ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.purple,
-        unselectedItemColor: Colors.black,
-        onTap: _onItemTapped,
-      ),
     );
+  }
+
+  Color _getEstadoColor(int estadoId) {
+    switch (estadoId) {
+      case 9:
+        return Colors.blue;
+      case 10:
+        return Colors.green;
+      case 11:
+        return Colors.green;
+      case 12:
+        return Colors.red;
+      case 13:
+        return Colors.grey;
+      default:
+        return Colors.black;
+    }
   }
 }

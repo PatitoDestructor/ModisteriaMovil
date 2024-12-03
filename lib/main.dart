@@ -85,57 +85,70 @@ void _login() async {
 
         Map<String, dynamic> userData = decodedToken['payload'];
 
-        // print('ID: ${userData['id']}');
-        // print('Email: ${userData['email']}');
-        // print('Nombre: ${userData['nombre']}');
-        // print('Telefono: ${userData['telefono']}');
-        // print('Password: ${userData['password']}');
-        // print('Direccion: ${userData['direccion']}');
-        // print('Role: ${userData['role']}');
+        if (userData['role']['id'] != 2){
+            AwesomeDialog(
+            context: context,
+            dialogType: DialogType.error,
+            animType: AnimType.scale,
+            showCloseIcon: false,
+            title: "Ups...",
+            dialogBackgroundColor	: const Color.fromRGBO(255, 255, 255, 1),
+            barrierColor: const Color.fromARGB(147, 26, 26, 26),
+            desc: "Aplicación solo para Administradores",
+            headerAnimationLoop: true,
+            btnOkOnPress: () {
+              
+            },
+            descTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 18),
+            buttonsBorderRadius : const BorderRadius.all(Radius.circular(500)),
+            titleTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 24)
+          ).show();
+        }else{
 
-        if (userData['id'] != null) {
-          User user = User(
-            id: userData['id'],
-            nombre: userData['nombre'],
-            email: userData['email'],
-            telefono: userData['telefono'],
-            password: userData['password'],
-            direccion: userData['direccion'] ?? '',  
-            roleId: userData['role']['id'],
-          );
+            if (userData['id'] != null) {
+            User user = User(
+              id: userData['id'],
+              nombre: userData['nombre'],
+              email: userData['email'],
+              telefono: userData['telefono'],
+              password: userData['password'],
+              direccion: userData['direccion'] ?? '',  
+              roleId: userData['role']['id'],
+            );
 
-          Provider.of<UserProvider>(context, listen: false).saveUser(user);
+            Provider.of<UserProvider>(context, listen: false).saveUser(user);
 
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('x-token', token);
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString('x-token', token);
 
-          verificarToken();
+            verificarToken();
 
-          AwesomeDialog(
-              context: context,
-              dialogType: DialogType.success,
-              animType: AnimType.scale,
-              showCloseIcon: false,
-              title: "Bienvenido",
-              dialogBackgroundColor	: const Color.fromRGBO(255, 255, 255, 1),
-              barrierColor: const Color.fromARGB(147, 26, 26, 26),
-              desc: "Inicio Sesión Correcto, Bienvenido querido Usuario...",
-              headerAnimationLoop: true,
-              btnOkOnPress: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => MyHomePage()),
-              );
-              },
-              descTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 18),
-              buttonsBorderRadius : const BorderRadius.all(Radius.circular(500)),
-              titleTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 24)
-            ).show();
+            AwesomeDialog(
+                context: context,
+                dialogType: DialogType.success,
+                animType: AnimType.scale,
+                showCloseIcon: false,
+                title: "Correcto",
+                dialogBackgroundColor	: const Color.fromRGBO(255, 255, 255, 1),
+                barrierColor: const Color.fromARGB(147, 26, 26, 26),
+                desc: "Bienvenido querido Usuario...",
+                headerAnimationLoop: true,
+                btnOkOnPress: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => MyHomePage()),
+                );
+                },
+                descTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 18),
+                buttonsBorderRadius : const BorderRadius.all(Radius.circular(500)),
+                titleTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 24)
+              ).show();
 
-          final prefes = await SharedPreferences.getInstance();
-          await prefs.setBool('loggedIn', true);
-        } else {
-          print('Error: El campo "id" es nulo');
+            final prefes = await SharedPreferences.getInstance();
+            await prefs.setBool('loggedIn', true);
+          } else {
+            print('Error: El campo "id" es nulo');
+          }
         }
       } else {
         print('Error de inicio de sesión: ${response.statusCode}');
@@ -205,12 +218,16 @@ Future<void> verificarToken() async {
     return Scaffold(
       body: SingleChildScrollView(
         child: Container(
-          margin: const EdgeInsets.only(top: 40, left: 30, right: 30),
+          margin: const EdgeInsets.only(top: 20, left: 30, right: 30),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Container(
-                margin: const EdgeInsets.only(top: 50, bottom: 30, left: 60),
+                margin: const EdgeInsets.only(left: 100, bottom: 10),
+                child: const Image(image: AssetImage('assets/img/icon.png'), height: 100,),
+              ),
+              Container(
+                margin: const EdgeInsets.only(bottom: 10, left: 35),
                 child: const Text(
                   'Modisteria D.L',
                   textAlign: TextAlign.center,
@@ -221,7 +238,7 @@ Future<void> verificarToken() async {
                 ),
               ),
               Container(
-                margin: const EdgeInsets.only(left: 120, bottom: 30),
+                margin: const EdgeInsets.only(left: 100, bottom: 20),
                 child: const Text(
                   'Ingresar',
                   style: TextStyle(
@@ -328,28 +345,6 @@ Future<void> verificarToken() async {
                             fontSize: 14,
                             color: Colors.purple,
                           ),
-                        ),
-                      ),
-                    ),
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 0),
-                      child: const Text(
-                        'O Registrate en la Web',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                            color: Colors.black),
-                      ),
-                    ),
-                    Container(
-                      margin: const EdgeInsets.only(top: 20),
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () {},
-                        child: const Image(
-                          image: NetworkImage(
-                              'https://w7.pngwing.com/pngs/639/449/png-transparent-computer-icons-website-icon-text-globe-symmetry.png'),
-                          height: 25,
                         ),
                       ),
                     ),

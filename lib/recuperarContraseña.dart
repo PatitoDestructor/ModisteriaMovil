@@ -42,6 +42,7 @@ class _PasswordRecoveryPageState extends State<PasswordRecoveryPage> {
         });
 
         print(response.statusCode);
+        print(response.body);
 
         if (response.statusCode == 200) {
           showModalBottomSheet(
@@ -270,7 +271,7 @@ class _CodeVerificationModalState extends State<CodeVerificationModal> {
               dialogType: DialogType.success,
               animType: AnimType.scale,
               showCloseIcon: false,
-              title: "Se actualizó tu Contraseña",
+              title: "Correcto",
               dialogBackgroundColor	: const Color.fromRGBO(255, 255, 255, 1),
               barrierColor: const Color.fromARGB(147, 26, 26, 26),
               desc: "Tu Contraseña fue cambiada, no la olvides de nuevo.",
