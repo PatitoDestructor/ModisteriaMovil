@@ -44,7 +44,7 @@ class _MyHomePageState extends State<MyHomePage> {
   final Map<int, String> estados = {
     0: 'Todas',
     9: 'Por aprobar',
-    10: 'Aprobada',
+    10: 'Cotizada',
     11: 'Aceptada',
     12: 'Cancelada',
     13: 'Terminada',
@@ -1325,7 +1325,7 @@ Future<void> _terminarCita(int id) async {
       case 9:
         return Colors.blue;
       case 10:
-        return Colors.green;
+        return Colors.orange;
       case 11:
         return Colors.green;
       case 12:
