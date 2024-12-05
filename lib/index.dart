@@ -922,6 +922,67 @@ void _mostrarModalEditarCita(BuildContext context, Map<String, dynamic> cita) {
   );
 }
 
+Future<void> _terminarCita(int id) async {
+  final url = Uri.parse('https://modisteria-back-production.up.railway.app/api/citainsumos/endCitaCreateVenta');
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  String? token = prefs.getString('x-token');
+
+  try {
+    final response = await http.put(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'x-token': token ?? '',
+      },
+      body: json.encode({
+        'citaId': id,
+      }),
+    );
+
+    if (response.statusCode == 201) {
+      AwesomeDialog(
+      context: context,
+      dialogType: DialogType.success,
+      animType: AnimType.scale,
+      showCloseIcon: false,
+      title: "Perfecto",
+      dialogBackgroundColor	: const Color.fromRGBO(255, 255, 255, 1),
+      barrierColor: const Color.fromARGB(147, 26, 26, 26),
+      desc: "Cita finalizada exitosamente.",
+      headerAnimationLoop: true,
+      btnOkOnPress: () {
+        _fetchCitas();
+      },
+      descTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 18),
+      buttonsBorderRadius : const BorderRadius.all(Radius.circular(500)),
+      titleTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 24)
+      ).show();
+    } else {
+        AwesomeDialog(
+        context: context,
+        dialogType: DialogType.error,
+        animType: AnimType.scale,
+        showCloseIcon: false,
+        title: "Ups...",
+        dialogBackgroundColor	: const Color.fromRGBO(255, 255, 255, 1),
+        barrierColor: const Color.fromARGB(147, 26, 26, 26),
+        desc: "Error al finalizar la Cita.",
+        headerAnimationLoop: true,
+        btnOkOnPress: () {
+        },
+        descTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 18),
+        buttonsBorderRadius : const BorderRadius.all(Radius.circular(500)),
+        titleTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 24)
+        ).show();
+        
+        print(response.statusCode);
+        print(response.body);
+    }
+  } catch (e) {
+    print('Error en la solicitud: $e');
+  }
+}
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1128,7 +1189,7 @@ void _mostrarModalEditarCita(BuildContext context, Map<String, dynamic> cita) {
                                                 ),
                                               ),
 
-                                            if(cita['estadoId'] == 10)
+                                          if(cita['estadoId'] == 10)
                                               ElevatedButton.icon(
                                                 onPressed: () {
                                                   _mostrarModalEditarCita(context, cita);
@@ -1136,6 +1197,40 @@ void _mostrarModalEditarCita(BuildContext context, Map<String, dynamic> cita) {
                                                 label: const Icon(Icons.edit, color: Colors.white),
                                                 style: ElevatedButton.styleFrom(
                                                   backgroundColor: Colors.blue,
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius: BorderRadius.circular(20),
+                                                  ),
+                                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                                ),
+                                              ),
+
+                                              if(cita['estadoId'] == 11)
+                                              ElevatedButton.icon(
+                                                onPressed: () {
+                                                    AwesomeDialog(
+                                                    context: context,
+                                                    dialogType: DialogType.warning,
+                                                    animType: AnimType.scale,
+                                                    showCloseIcon: true,
+                                                    title: "Cuidado",
+                                                    dialogBackgroundColor	: const Color.fromRGBO(255, 255, 255, 1),
+                                                    barrierColor: const Color.fromARGB(147, 26, 26, 26),
+                                                    desc: "¿Estás seguro de terminar la cita de ${usuario['nombre']}?",
+                                                    headerAnimationLoop: true,
+                                                    btnOkOnPress: () {
+                                                      _terminarCita(cita['id']);
+                                                    },
+                                                    btnCancelText: "Cancelar",       // Texto del botón de Cancelar
+                                                    btnCancelOnPress: () {
+                                                    },
+                                                    descTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 18),
+                                                    buttonsBorderRadius : const BorderRadius.all(Radius.circular(500)),
+                                                    titleTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 24)
+                                                  ).show();
+                                                },
+                                                label: const Text('Terminar cita', style: TextStyle(color: Colors.white),),
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: Colors.purple,
                                                   shape: RoundedRectangleBorder(
                                                     borderRadius: BorderRadius.circular(20),
                                                   ),
