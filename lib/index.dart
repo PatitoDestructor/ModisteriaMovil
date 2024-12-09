@@ -1204,39 +1204,39 @@ Future<void> _terminarCita(int id) async {
                                                 ),
                                               ),
 
-                                              if(cita['estadoId'] == 11)
-                                              ElevatedButton.icon(
-                                                onPressed: () {
-                                                    AwesomeDialog(
-                                                    context: context,
-                                                    dialogType: DialogType.warning,
-                                                    animType: AnimType.scale,
-                                                    showCloseIcon: true,
-                                                    title: "Cuidado",
-                                                    dialogBackgroundColor	: const Color.fromRGBO(255, 255, 255, 1),
-                                                    barrierColor: const Color.fromARGB(147, 26, 26, 26),
-                                                    desc: "¿Estás seguro de terminar la cita de ${usuario['nombre']}?",
-                                                    headerAnimationLoop: true,
-                                                    btnOkOnPress: () {
-                                                      _terminarCita(cita['id']);
-                                                    },
-                                                    btnCancelText: "Cancelar",       // Texto del botón de Cancelar
-                                                    btnCancelOnPress: () {
-                                                    },
-                                                    descTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 18),
-                                                    buttonsBorderRadius : const BorderRadius.all(Radius.circular(500)),
-                                                    titleTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 24)
-                                                  ).show();
-                                                },
-                                                label: const Text('Terminar cita', style: TextStyle(color: Colors.white),),
-                                                style: ElevatedButton.styleFrom(
-                                                  backgroundColor: Colors.purple,
-                                                  shape: RoundedRectangleBorder(
-                                                    borderRadius: BorderRadius.circular(20),
-                                                  ),
-                                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                                                ),
-                                              ),
+                                              // if(cita['estadoId'] == 11)
+                                              // ElevatedButton.icon(
+                                              //   onPressed: () {
+                                              //       AwesomeDialog(
+                                              //       context: context,
+                                              //       dialogType: DialogType.warning,
+                                              //       animType: AnimType.scale,
+                                              //       showCloseIcon: true,
+                                              //       title: "Cuidado",
+                                              //       dialogBackgroundColor	: const Color.fromRGBO(255, 255, 255, 1),
+                                              //       barrierColor: const Color.fromARGB(147, 26, 26, 26),
+                                              //       desc: "¿Estás seguro de terminar la cita de ${usuario['nombre']}?",
+                                              //       headerAnimationLoop: true,
+                                              //       btnOkOnPress: () {
+                                              //         _terminarCita(cita['id']);
+                                              //       },
+                                              //       btnCancelText: "Cancelar",       // Texto del botón de Cancelar
+                                              //       btnCancelOnPress: () {
+                                              //       },
+                                              //       descTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 18),
+                                              //       buttonsBorderRadius : const BorderRadius.all(Radius.circular(500)),
+                                              //       titleTextStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 24)
+                                              //     ).show();
+                                              //   },
+                                              //   label: const Text('Terminar cita', style: TextStyle(color: Colors.white),),
+                                              //   style: ElevatedButton.styleFrom(
+                                              //     backgroundColor: Colors.purple,
+                                              //     shape: RoundedRectangleBorder(
+                                              //       borderRadius: BorderRadius.circular(20),
+                                              //     ),
+                                              //     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                              //   ),
+                                              // ),
 
                                               if(cita['estadoId'] == 10)
                                               ElevatedButton.icon(

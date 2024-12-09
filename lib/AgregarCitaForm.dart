@@ -33,7 +33,7 @@ class _AgregarCitaPageState extends State<AgregarCitaPage> {
     _fetchInsumos();
   }
 
-  Future<void> _fetchUsuarios() async {
+Future<void> _fetchUsuarios() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('x-token');
 
@@ -192,7 +192,7 @@ void _submitForm() async {
 
       final int precioEntero = int.tryParse(formData['precio']) ?? 0;
 
-      const String apiUrl = "https://modisteria-back-production.up.railway.app/api/citas/crearCita";
+      const String apiUrl = "https://modisteria-back-production.up.railway.app/api/citas/crearCitaAdmin";
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? token = prefs.getString('x-token');
 
@@ -216,13 +216,35 @@ void _submitForm() async {
           'usuarioId': formData['usuario'],
           'precio': precioEntero,
           'tiempo': tiempoFormateado.toString(),
-          'datosInsumos': datosInsumos,
           'estadoId': 10
         }),
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
+
+        var jsonResponse = jsonDecode(response.body);
+        int citaId = jsonResponse['cita']['id'];
+        final urlInsumos = Uri.parse('https://modisteria-back-production.up.railway.app/api/citainsumos/createAndDiscount');
+
+        final responseInsumos = await http.post(
+        urlInsumos,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(<String, dynamic>{
+          'citaId': citaId,
+          'datosInsumos':datosInsumos
+        }),
+      );
+
+      if (responseInsumos.statusCode == 201) {
+        print("insumos descontados");
+      }else{
+        print("error al descontar insumos");
+      }
+
+        print(jsonResponse);
         await _mostrarDialogoExito(context, fechaFormateada, horaFormateada, formData);
+
+
       } else {
         final responseData = jsonDecode(response.body);
         final msg = responseData['msg'] ?? "Error desconocido.";
